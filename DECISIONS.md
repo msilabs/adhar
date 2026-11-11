@@ -36,3 +36,15 @@
 | ২৩ | CI: Linux আর Windows-এ Node 22, 24, 26; macOS-এ শুধু 24 | macOS runner ধীর; OS-নির্ভর ভুল Node ভার্সনে কমই বদলায় (মালিক, ২০২৬-১১-১১) |
 | ২৪ | লোকাল ডেভেলপমেন্ট Node 24-এ | মালিক, ২০২৬-১১-১১ |
 | ২৫ | এখনো তৈরি না হওয়া কমান্ড চালালে পরিষ্কার ভুল: "is not built yet" | milestone চলাকালীন নীরব ব্যর্থতা এড়ানো; milestone ১০-এর পর এই পথ থাকবে না |
+| ২৬ | Milestone ২-এ `createApp({ handler })` একটি handler হাতে নেয়; milestone ৩-এ এর জায়গায় আসবে `routes/` স্ক্যান | routing-এর আগে request থেকে response-এর পথটি আলাদাভাবে পরীক্ষা করা |
+| ২৭ | JSON response-এর `Content-Type`: `application/json; charset=utf-8` | বাংলা লেখা সব ক্লায়েন্টে ঠিক দেখায় |
+| ২৮ | `ctx.error(404)`-এ মেসেজ না দিলে আসে HTTP-র প্রমিত লেখা (`Not Found`) | যা স্বাভাবিক, তা-ই ঘটে |
+| ২৯ | throw-এর আগে `ctx.header()` দিয়ে বসানো header ভুলের response-এও থাকে; `Content-Type` সবসময় JSON | middleware-এর বসানো header (যেমন request id) ভুলেও দরকার |
+| ৩০ | `204` আর `304`-এ body কখনো যায় না, handler কিছু return করলেও | HTTP-র নিয়ম |
+| ৩১ | handler function, symbol বা BigInt return করলে `500`, পরিষ্কার মেসেজসহ | নীরবে ফাঁকা response না দেওয়া |
+| ৩২ | ফাঁকা body মানে `ctx.body === undefined`, `Content-Type` যা-ই হোক; `+json` দিয়ে শেষ হওয়া টাইপও JSON | body ছাড়া `DELETE`/`POST` স্বাভাবিক |
+| ৩৩ | `Content-Type` ছাড়া body এলে `415`, কীভাবে JSON পাঠাতে হয় তার ইঙ্গিতসহ | অনুমান করে পার্স করা নিরাপদ নয় |
+| ৩৪ | query আর form-এ `__proto__` নামের field বাদ পড়ে | prototype pollution থেকে সুরক্ষা |
+| ৩৫ | core অপ্রত্যাশিত ভুল (`500`) জানায় `onError` callback দিয়ে; নিজে কিছু ছাপে না। `ctx.error()`-এর ভুল জানানো হয় না | core আর cli আলাদা; 4xx স্বাভাবিক ঘটনা |
+| ৩৬ | `ctx.status()` 100–599 আর `ctx.error()` 400–599-এর বাইরের মান পেলে `TypeError` | টাইপো তখনই ধরা পড়ে |
+| ৩৭ | body-র সীমা দুই জায়গায় দেখা হয়: stream পড়ার সময় (`Content-Length` আগে) আর পার্সের আগে | মেমরি সুরক্ষা; `inject` আর আসল HTTP একই আচরণ করে |

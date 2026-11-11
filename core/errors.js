@@ -10,6 +10,17 @@ class AdharError extends Error {
     }
 }
 
+// An error that becomes an HTTP response: thrown by handlers through ctx.error(), and by the core for 4xx cases.
+class HttpError extends Error {
+    constructor(status, message, { fields, headers } = {}) {
+        super(message);
+        this.name = 'HttpError';
+        this.status = status;
+        this.fields = fields;
+        this.headers = headers;
+    }
+}
+
 function levenshtein(a, b) {
     const left = Array.from(a);
     const right = Array.from(b);
@@ -68,6 +79,7 @@ function formatDiagnostic(diagnostic) {
 
 module.exports = {
     AdharError,
+    HttpError,
     levenshtein,
     suggest,
     formatLocation,
