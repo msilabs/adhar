@@ -104,3 +104,10 @@
 | ৯১ | worker চালু হতে ব্যর্থ হলে `adhar dev` বেঁচে থাকে আর পরের বদলের অপেক্ষা করে | ভুল ঠিক করে সেভ করলেই আবার চালু |
 | ৯২ | parent প্রসেস হঠাৎ মরে গেলে worker নিজে বন্ধ হয় | এতিম প্রসেস পোর্ট আটকে রাখত |
 | ৯৩ | `adhar dev` প্রজেক্টের বাইরে চালালে সাথে সাথে ভুল দিয়ে শেষ হয় | অপেক্ষা করার মতো কিছু নেই |
+| ৯৪ | সাহায্য আর ডকে `adhar new route "users/[id]"`, `adhar new middleware "(admin)"`: উদ্ধৃতিচিহ্নসহ | shell-এ `[ ]` আর `( )`-এর নিজস্ব অর্থ আছে; উদ্ধৃতি ছাড়া zsh ভুল দেয় |
+| ৯৫ | `.gitignore`, `.env`, `.env.example` আর `adhar` launcher টেমপ্লেট ফোল্ডারে নেই; `init` কোড থেকে লেখে | npm প্রকাশের সময় `.gitignore`-এর মতো dot-ফাইল বাদ দেয় বা নাম বদলায় |
+| ৯৬ | `init` একটি চালু `.env` বানায় (`ADMIN_TOKEN=change-me`), আর `.gitignore`-এ `.env` থাকে | `node adhar dev` সাথে সাথে চলে; secret git-এ যায় না |
+| ৯৭ | টেমপ্লেটের service `done`-কে `true`/`false`-এ ফেরায় | SQLite-এ boolean নেই; service-ই ডেটার আকার ঠিক করে, এটি তার উদাহরণ |
+| ৯৮ | `adhar new route .` আর `adhar new middleware .` মানে `routes/`-এর রুট | Alo-র `alo new page .`-এর মতো |
+| ৯৯ | `adhar new service blog-posts`-এ ভুল, সঠিক নামের (`blogPosts`) ইঙ্গিতসহ | নাম সরাসরি `ctx.services.<নাম>` হয় |
+| ১০০ | #২৫-এর "is not built yet" পথ সরানো হয়েছে; সব কমান্ড তৈরি | milestone ১০ শেষ |

@@ -37,7 +37,8 @@
     "files": [
         "bin",
         "cli",
-        "core"
+        "core",
+        "templates"
     ],
     "scripts": {
         "test": "node --test \"test/**/*.test.js\""

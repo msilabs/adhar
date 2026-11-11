@@ -453,8 +453,8 @@ adhar dev [--port 3000]           dev server, restarts on change
 adhar start [--port 3000]         production server
 adhar routes                      list all routes
 adhar migrate                     run pending migrations
-adhar new route users/[id]        routes/users/[id]/route.js
-adhar new middleware (admin)      routes/(admin)/middleware.js
+adhar new route "users/[id]"      routes/users/[id]/route.js
+adhar new middleware "(admin)"    routes/(admin)/middleware.js
 adhar new service blog/posts      services/blog/posts.js
 adhar new migration create-posts  migrations/<next number>-create-posts.sql
 adhar --help

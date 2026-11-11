@@ -27,8 +27,8 @@ Usage:
   adhar start [--port 3000]          production server
   adhar routes                       list all routes
   adhar migrate                      run pending migrations
-  adhar new route users/[id]         routes/users/[id]/route.js
-  adhar new middleware (admin)       routes/(admin)/middleware.js
+  adhar new route "users/[id]"       routes/users/[id]/route.js
+  adhar new middleware "(admin)"     routes/(admin)/middleware.js
   adhar new service blog/posts       services/blog/posts.js
   adhar new migration create-posts   migrations/<next number>-create-posts.sql
   adhar --help                       show this help
@@ -111,27 +111,22 @@ function validateFlags(command, flags) {
 }
 
 async function runCommand(command, args, flags) {
-    if (command === 'routes') {
-        require('./routes.js').listRoutes(process.cwd());
-        return;
-    }
-    if (command === 'migrate') {
+    const root = process.cwd();
+
+    if (command === 'init') {
+        require('./scaffold.js').init(root, args[0]);
+    } else if (command === 'new') {
+        require('./scaffold.js').create(root, args);
+    } else if (command === 'routes') {
+        require('./routes.js').listRoutes(root);
+    } else if (command === 'migrate') {
         const { loadEnv } = require('../core/env.js');
-        require('./migrate.js').migrate(process.cwd(), loadEnv(process.cwd(), process.env));
-        return;
+        require('./migrate.js').migrate(root, loadEnv(root, process.env));
+    } else if (command === 'dev') {
+        require('./dev.js').runDev({ root, port: flags.port });
+    } else {
+        await require('./serve.js').run({ root, port: flags.port, dev: false });
     }
-    if (command === 'dev') {
-        require('./dev.js').runDev({ root: process.cwd(), port: flags.port });
-        return;
-    }
-    if (command === 'start') {
-        await require('./serve.js').run({ root: process.cwd(), port: flags.port, dev: false });
-        return;
-    }
-    throw new AdharError({
-        message: `\`adhar ${command}\` is not built yet.`,
-        hint: 'Adhar is still under construction. See docs/SPEC.md for the plan.',
-    });
 }
 
 async function main(argv) {
