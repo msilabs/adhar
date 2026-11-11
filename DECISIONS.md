@@ -76,3 +76,13 @@
 | ৬৩ | service-এর factory `async` হতে পারে না | চালু হওয়া সরল আর sync থাকে; অপেক্ষা method-এর ভেতরে |
 | ৬৪ | service গাছ অপরিবর্তনীয় (frozen) | request চলাকালীন কেউ service বদলাতে পারে না |
 | ৬৫ | `services/` না থাকলেও `ctx.services` থাকে (ফাঁকা) | ভুল নামে একই ধরনের পরিষ্কার মেসেজ |
+| ৬৬ | SQL প্যারামিটারে `true`/`false` হয় `1`/`0`, `undefined` হয় `NULL` | schema-র `boolean` আর ঐচ্ছিক field সরাসরি SQL-এ দেওয়া যায়; Node-এর সব ভার্সনে একই আচরণ |
+| ৬৭ | SQL প্যারামিটারে object, array বা `Date` দিলে ভুল, কী করতে হবে তার পরামর্শসহ | `node:sqlite` object-কে নামযুক্ত প্যারামিটার ধরে নীরবে উপেক্ষা করে |
+| ৬৮ | `db.all`/`db.get` সাধারণ object ফেরত দেয় (`node:sqlite`-এর prototype-ছাড়া object নয়) | টেস্টে `deepEqual` আর `console.log` স্বাভাবিক আচরণ করে |
+| ৬৯ | SQL ভুলের মেসেজে SQLite-এর লেখার সাথে statement (১২০ অক্ষর পর্যন্ত) | কোন query ভুল, তা সাথে সাথে বোঝা যায় |
+| ৭০ | ভেতরের `db.transaction()` একটি savepoint | ভেতরেরটি ব্যর্থ হলেও বাইরেরটি চলতে পারে |
+| ৭১ | `db.exec(sql)` আছে: প্যারামিটার ছাড়া একাধিক statement। migration এটি ব্যবহার করে | স্পেকের চারটির বাইরে একমাত্র সংযোজন; migration ফাইলে একাধিক statement থাকে |
+| ৭২ | `createApp`-এর `migrations` অপশন: `run` (ডিফল্ট), `check`, `skip`। `adhar start` দেবে `check` | টেস্টে `createApp(root)` ডাকলেই টেবিল তৈরি থাকে |
+| ৭৩ | `DATABASE_PATH` প্রজেক্ট রুটের সাপেক্ষে; `:memory:` চলে | কোন ফোল্ডার থেকে কমান্ড চালানো হলো তার ওপর নির্ভর করে না |
+| ৭৪ | migration-এর নাম: তিন অঙ্ক, `-`, ছোট হাতের নাম, `.sql`; অন্য `.sql` ফাইল ভুল | ক্রম নিয়ে দ্ব্যর্থতা নেই |
+| ৭৫ | মুছে ফেলা বা বদলানো পুরনো migration ধরা হয় না | v1 সরল; `_migrations`-এ শুধু নাম থাকে |

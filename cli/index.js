@@ -115,6 +115,10 @@ async function runCommand(command) {
         require('./routes.js').listRoutes(process.cwd());
         return;
     }
+    if (command === 'migrate') {
+        require('./migrate.js').migrate(process.cwd(), process.env);
+        return;
+    }
     throw new AdharError({
         message: `\`adhar ${command}\` is not built yet.`,
         hint: 'Adhar is still under construction. See docs/SPEC.md for the plan.',

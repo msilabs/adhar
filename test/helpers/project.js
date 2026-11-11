@@ -17,7 +17,13 @@ function makeProject(t, files) {
         fs.writeFileSync(target, content);
     }
 
-    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    t.after(() => {
+        try {
+            fs.rmSync(root, { recursive: true, force: true, maxRetries: 3 });
+        } catch {
+            // Windows refuses to delete a database file that is still open; the temp folder is left behind.
+        }
+    });
     return root;
 }
 
