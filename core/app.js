@@ -1,5 +1,6 @@
 'use strict';
 
+const { createCors } = require('./cors.js');
 const { createDb, databasePath } = require('./db.js');
 const { AdharError, HttpError } = require('./errors.js');
 const { runChain } = require('./middleware.js');
@@ -32,6 +33,7 @@ function prepareDatabase(root, db, mode) {
 // Loads and checks the whole project up front, so mistakes show at startup, not on the first request.
 async function createApp(root, options = {}) {
     const env = Object.freeze({ ...options.env });
+    const cors = createCors(env.CORS_ORIGIN);
     const router = loadRoutes(root);
     const db = createDb(databasePath(root, env));
     const services = loadServices(root, { db, env });
@@ -55,6 +57,11 @@ async function createApp(root, options = {}) {
         if (!found) return runChain(router.rootChain, ctx, answerNotFound);
 
         const { route, params } = found;
+        // A browser sends the preflight without credentials, so it must not reach any middleware.
+        if (cors?.isPreflight(ctx)) {
+            cors.answerPreflight(ctx, route);
+            return undefined;
+        }
         if (ctx.method === 'OPTIONS') {
             return runChain(router.rootChain, ctx, () => {
                 ctx.status(204).header('allow', route.allow);
@@ -78,13 +85,31 @@ async function createApp(root, options = {}) {
         });
     }
 
-    const pipeline = createPipeline({ ...options, env, services, db, handler });
+    const pipeline = createPipeline({
+        ...options,
+        env,
+        services,
+        db,
+        handler,
+        baseHeaders: cors ? cors.headersFor : undefined,
+    });
+
+    const warnings = [];
+    if (router.routes.length === 0) {
+        warnings.push({ message: 'This project has no routes yet.', hint: 'Add one at routes/route.js.' });
+    }
+    if (cors?.any && env.NODE_ENV === 'production') {
+        warnings.push({
+            message: '`CORS_ORIGIN=*` lets any website call this API.',
+            hint: 'In production, list the origins you trust, like `CORS_ORIGIN=https://example.com`.',
+        });
+    }
 
     async function close() {
         db.close();
     }
 
-    return { ...pipeline, routes: router.routes, close };
+    return { ...pipeline, routes: router.routes, warnings, close };
 }
 
 module.exports = { createApp };

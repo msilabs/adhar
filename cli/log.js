@@ -41,6 +41,27 @@ function bug(err) {
     stream.write(String(err && err.stack ? err.stack : err) + '\n');
 }
 
+// One line per request: `GET /users 200 3ms`.
+function request(method, url, status, milliseconds) {
+    const stream = process.stdout;
+    const color = status >= 500 ? 'red' : status >= 400 ? 'yellow' : 'green';
+    stream.write(`${method} ${url} ${paint(stream, color, String(status))} ${paint(stream, 'dim', milliseconds + 'ms')}\n`);
+}
+
+// The details of a 500, which the response hides in production.
+function requestError(failed, err) {
+    const stream = process.stderr;
+    stream.write(paint(stream, 'red', `✖ ${failed.method} ${failed.url}`) + '\n');
+    stream.write(String(err && err.stack ? err.stack : err) + '\n\n');
+}
+
+// A promise in the user's code failed and nothing was waiting for it.
+function unhandled(err) {
+    const stream = process.stderr;
+    stream.write(paint(stream, 'red', '✖ Unhandled promise rejection:') + '\n');
+    stream.write(String(err && err.stack ? err.stack : err) + '\n\n');
+}
+
 function info(message) {
     process.stdout.write(message + '\n');
 }
@@ -53,4 +74,4 @@ function dim(message) {
     process.stdout.write(paint(process.stdout, 'dim', message) + '\n');
 }
 
-module.exports = { error, warn, bug, info, success, dim };
+module.exports = { error, warn, bug, request, requestError, unhandled, info, success, dim };

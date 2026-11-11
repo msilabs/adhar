@@ -110,13 +110,18 @@ function validateFlags(command, flags) {
     flags.port = port;
 }
 
-async function runCommand(command) {
+async function runCommand(command, args, flags) {
     if (command === 'routes') {
         require('./routes.js').listRoutes(process.cwd());
         return;
     }
     if (command === 'migrate') {
-        require('./migrate.js').migrate(process.cwd(), process.env);
+        const { loadEnv } = require('../core/env.js');
+        require('./migrate.js').migrate(process.cwd(), loadEnv(process.cwd(), process.env));
+        return;
+    }
+    if (command === 'start') {
+        await require('./serve.js').run({ root: process.cwd(), port: flags.port, dev: false });
         return;
     }
     throw new AdharError({
