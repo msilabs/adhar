@@ -48,3 +48,12 @@
 | ৩৫ | core অপ্রত্যাশিত ভুল (`500`) জানায় `onError` callback দিয়ে; নিজে কিছু ছাপে না। `ctx.error()`-এর ভুল জানানো হয় না | core আর cli আলাদা; 4xx স্বাভাবিক ঘটনা |
 | ৩৬ | `ctx.status()` 100–599 আর `ctx.error()` 400–599-এর বাইরের মান পেলে `TypeError` | টাইপো তখনই ধরা পড়ে |
 | ৩৭ | body-র সীমা দুই জায়গায় দেখা হয়: stream পড়ার সময় (`Content-Length` আগে) আর পার্সের আগে | মেমরি সুরক্ষা; `inject` আর আসল HTTP একই আচরণ করে |
+| ৩৮ | request থেকে response-এর পথ `core/pipeline.js`-এ; `core/app.js` প্রজেক্ট লোড করে আর route মেলায়। #২৬-এর সাময়িক `createApp({ handler })` এখন `createPipeline` | pipeline প্রজেক্ট ছাড়াই পরীক্ষা করা যায় |
+| ৩৯ | `Allow` header-এ route-এর method গুলো, `GET` থাকলে `HEAD`, আর সবসময় `OPTIONS` | `HEAD` আর `OPTIONS` নিজে থেকে চলে |
+| ৪০ | স্থির ফোল্ডার আগে মেলে; সেই পথে route না পেলে ডায়নামিক ফোল্ডার চেষ্টা হয় (`/users/me/posts` → `users/[id]/posts`) | যা স্বাভাবিক, তা-ই ঘটে |
+| ৪১ | `routes/`-এ `.` দিয়ে শুরু ফোল্ডার আর `.js` নয় এমন ফাইল উপেক্ষিত | `.DS_Store`, README-র মতো ফাইলে ভুল না দেওয়া |
+| ৪২ | route ফাইলের syntax ভুলে লাইন নম্বর নেই; ইঙ্গিতে `node --check <ফাইল>` | `require()` দিয়ে লোড করা ES module-এর syntax ভুলে Node জায়গা জানায় না |
+| ৪৩ | route আছে কিন্তু method অজানা (যেমন `TRACE`) → `405` | route নেই বলা ভুল হতো |
+| ৪৪ | body পার্স হয় route মেলানোর আগে, তাই ভাঙা JSON-এ `400` আসে `404`-এর আগে | এক ক্রম, সহজ pipeline |
+| ৪৫ | route ফাইলে top-level `await` চলে না; পরিষ্কার ভুল | `require()` async module লোড করতে পারে না |
+| ৪৬ | টেস্টের প্রজেক্ট আসল অস্থায়ী ফোল্ডারে লেখা হয় (Alo-র মতো memory fs নয়) | ব্যবহারকারীর ফাইল Node নিজে লোড করে |

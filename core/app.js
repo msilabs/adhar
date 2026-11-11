@@ -1,87 +1,39 @@
 'use strict';
 
 const { HttpError } = require('./errors.js');
-const { parseForm, parseBody, readBody } = require('./body.js');
-const { createContext } = require('./context.js');
-const { toResponse, errorResponse } = require('./response.js');
+const { createPipeline } = require('./pipeline.js');
+const { loadRoutes } = require('./router.js');
 
-function parseUrl(url) {
-    const queryStart = url.indexOf('?');
-    let path = queryStart === -1 ? url : url.slice(0, queryStart);
-    const search = queryStart === -1 ? '' : url.slice(queryStart + 1);
+// Loads and checks the whole project up front, so mistakes show at startup, not on the first request.
+async function createApp(root, options = {}) {
+    const router = loadRoutes(root);
 
-    path = path.replace(/\/+$/, '');
-    if (path === '') path = '/';
+    function handler(ctx) {
+        const found = router.match(ctx.path);
+        if (!found) throw new HttpError(404, 'Not found');
 
-    return { path, query: parseForm(search) };
-}
-
-function lowerCaseKeys(headers) {
-    const result = {};
-    for (const [name, value] of Object.entries(headers)) result[name.toLowerCase()] = String(value);
-    return result;
-}
-
-// The core never opens a port or prints: `handle` maps a plain request to a plain response,
-// `inject` wraps it for tests, and `listener` adapts it to node:http.
-function createApp({ handler, dev = false, env = {}, onError = () => {} }) {
-    const frozenEnv = Object.freeze({ ...env });
-
-    // request: { method, url, headers (lower-case names), body (Buffer or undefined) }
-    async function handle(request) {
-        const response = { status: undefined, headers: {} };
-        try {
-            const { path, query } = parseUrl(request.url);
-            const body = parseBody(request.headers['content-type'], request.body);
-            const ctx = createContext(
-                { method: request.method, path, query, body, headers: request.headers, env: frozenEnv },
-                response,
-            );
-            return toResponse(await handler(ctx), response);
-        } catch (err) {
-            if (!(err instanceof HttpError)) onError(err, request);
-            return errorResponse(err, { dev, headers: response.headers });
-        }
-    }
-
-    async function inject({ method = 'GET', path = '/', headers = {}, body } = {}) {
-        const requestHeaders = lowerCaseKeys(headers);
-        let buffer;
-
-        if (typeof body === 'string' || Buffer.isBuffer(body)) {
-            buffer = Buffer.from(body);
-        } else if (body !== undefined) {
-            buffer = Buffer.from(JSON.stringify(body));
-            requestHeaders['content-type'] ??= 'application/json';
+        const { route, params } = found;
+        if (ctx.method === 'OPTIONS') {
+            ctx.status(204).header('allow', route.allow);
+            return undefined;
         }
 
-        const response = await handle({ method: method.toUpperCase(), url: path, headers: requestHeaders, body: buffer });
-        const isJson = String(response.headers['content-type']).startsWith('application/json');
-        return {
-            status: response.status,
-            headers: response.headers,
-            body: response.body === null ? undefined : isJson ? JSON.parse(response.body) : response.body,
-        };
+        const handle = route.handlers[ctx.method === 'HEAD' ? 'GET' : ctx.method];
+        if (!handle) {
+            throw new HttpError(405, `Method ${ctx.method} is not allowed for ${ctx.path}`, {
+                headers: { allow: route.allow },
+            });
+        }
+
+        ctx.params = params;
+        return handle(ctx);
     }
 
-    async function listener(req, res) {
-        let response;
-        try {
-            const body = await readBody(req);
-            response = await handle({ method: req.method, url: req.url, headers: req.headers, body });
-        } catch (err) {
-            // The body could not be read, so the rest of it may still be on the wire.
-            response = errorResponse(err, { dev });
-            response.headers.connection = 'close';
-        }
-        if (res.destroyed) return;
-        res.writeHead(response.status, response.headers);
-        res.end(response.body ?? undefined);
-    }
+    const pipeline = createPipeline({ ...options, handler });
 
     async function close() {}
 
-    return { handle, inject, listener, close };
+    return { ...pipeline, routes: router.routes, close };
 }
 
 module.exports = { createApp };

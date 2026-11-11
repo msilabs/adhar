@@ -111,6 +111,10 @@ function validateFlags(command, flags) {
 }
 
 async function runCommand(command) {
+    if (command === 'routes') {
+        require('./routes.js').listRoutes(process.cwd());
+        return;
+    }
     throw new AdharError({
         message: `\`adhar ${command}\` is not built yet.`,
         hint: 'Adhar is still under construction. See docs/SPEC.md for the plan.',
