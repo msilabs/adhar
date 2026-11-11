@@ -1,0 +1,29 @@
+name: CI
+
+on:
+    push:
+    pull_request:
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    test:
+        name: Node ${{ matrix.node }} · ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, windows-latest]
+                node: [22, 24, 26]
+                include:
+                    # macOS runners are slow to start; OS-specific bugs rarely depend on the Node version.
+                    - os: macos-latest
+                      node: 24
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: ${{ matrix.node }}
+            - run: npm test

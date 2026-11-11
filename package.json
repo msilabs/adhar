@@ -1,0 +1,44 @@
+{
+    "name": "@msilabs/adhar",
+    "version": "0.1.0",
+    "description": "Lightweight backend API framework: folder routes, middleware, validation, services and SQLite. Zero dependencies.",
+    "license": "MIT",
+    "keywords": [
+        "api",
+        "backend",
+        "framework",
+        "file-based-routing",
+        "sqlite",
+        "bangla",
+        "zero-dependency"
+    ],
+    "homepage": "https://github.com/msilabs/adhar#readme",
+    "bugs": {
+        "url": "https://github.com/msilabs/adhar/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/msilabs/adhar.git"
+    },
+    "type": "commonjs",
+    "publishConfig": {
+        "access": "public"
+    },
+    "engines": {
+        "node": ">=22.13"
+    },
+    "bin": {
+        "adhar": "bin/adhar.js"
+    },
+    "exports": {
+        "./cli": "./cli/index.js"
+    },
+    "files": [
+        "bin",
+        "cli",
+        "core"
+    ],
+    "scripts": {
+        "test": "node --test \"test/**/*.test.js\""
+    }
+}
