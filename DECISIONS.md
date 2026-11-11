@@ -111,3 +111,6 @@
 | ৯৮ | `adhar new route .` আর `adhar new middleware .` মানে `routes/`-এর রুট | Alo-র `alo new page .`-এর মতো |
 | ৯৯ | `adhar new service blog-posts`-এ ভুল, সঠিক নামের (`blogPosts`) ইঙ্গিতসহ | নাম সরাসরি `ctx.services.<নাম>` হয় |
 | ১০০ | #২৫-এর "is not built yet" পথ সরানো হয়েছে; সব কমান্ড তৈরি | milestone ১০ শেষ |
+| ১০১ | Node 22-এ `node:sqlite` লোডের সময়ের "SQLite is an experimental feature" সতর্কবার্তা লুকানো হয়; শুধু ওই একটি | Adhar জেনেশুনে এটি বেছেছে (#৪); প্রতি চালুতে নতুনদের জন্য বিভ্রান্তিকর। Node 24+-এ সতর্কবার্তাটি নেই |
+| ১০২ | README-তে npm badge নেই, আর CHANGELOG-এ 0.1.0 "প্রকাশিত হয়নি" | প্যাকেজ এখনো npm-এ নেই; প্রকাশ মালিকের সিদ্ধান্ত |
+| ১০৩ | README-র ক্রম Alo-র README-র মতো; বাড়তি বিষয় "পরে দেখুন" অংশে | Alo জানা পাঠক পরিচিত কাঠামো পায়; অংশ ০-ই শুরুর জন্য যথেষ্ট |

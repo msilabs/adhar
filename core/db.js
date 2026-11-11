@@ -22,6 +22,21 @@ function toSqlValue(value, index) {
     );
 }
 
+// On Node 22, loading node:sqlite prints "SQLite is an experimental feature" on every start.
+// Adhar chose it on purpose, so that one warning is kept out of the user's terminal.
+function loadSqlite() {
+    const emitWarning = process.emitWarning;
+    process.emitWarning = function (warning, ...rest) {
+        if (String(warning?.message ?? warning).includes('SQLite is an experimental feature')) return;
+        emitWarning.call(process, warning, ...rest);
+    };
+    try {
+        return require('node:sqlite');
+    } finally {
+        process.emitWarning = emitWarning;
+    }
+}
+
 function shorten(sql) {
     const oneLine = String(sql).replace(/\s+/g, ' ').trim();
     return oneLine.length > 120 ? oneLine.slice(0, 117) + '...' : oneLine;
@@ -36,7 +51,7 @@ function createDb(filename) {
     function open() {
         if (database) return database;
 
-        const { DatabaseSync } = require('node:sqlite');
+        const { DatabaseSync } = loadSqlite();
         if (filename !== MEMORY) fs.mkdirSync(path.dirname(filename), { recursive: true });
 
         database = new DatabaseSync(filename);

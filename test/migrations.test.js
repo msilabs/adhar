@@ -226,6 +226,8 @@ test('adhar migrate runs what is pending and says what it ran', (t) => {
 
     const first = adharMigrate(root);
     assert.equal(first.code, 0, first.stderr);
+    // Node 22 would print "SQLite is an experimental feature" here.
+    assert.equal(first.stderr, '');
     assert.deepEqual(first.stdout.trimEnd().split('\n'), ['✔ migrations/001-create-notes.sql', '✔ migrations/002-add-done.sql']);
     assert.equal(fs.existsSync(path.join(root, 'storage', 'app.db')), true);
 
