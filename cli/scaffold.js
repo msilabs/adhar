@@ -31,13 +31,13 @@ try {
 // These are written from here because npm leaves dot-files like .gitignore out of a published package.
 const GITIGNORE = 'node_modules/\nstorage/\n.env\n';
 const ENV_EXAMPLE = `# Copy this file to .env and change the values.
-PORT=3000
+PORT=8134
 
 # The token for the routes inside routes/(admin)/.
 ADMIN_TOKEN=change-me
 
 # Websites that may call this API from a browser, separated by commas.
-# CORS_ORIGIN=http://localhost:5173
+# CORS_ORIGIN=http://localhost:3000
 `;
 
 function packageName(folder) {

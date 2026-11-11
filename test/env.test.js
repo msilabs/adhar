@@ -30,11 +30,11 @@ test('loadEnv does not touch process.env', (t) => {
     assert.equal(process.env.ADHAR_TEST_ONLY, undefined);
 });
 
-test('the port comes from the flag, then PORT, then 3000', () => {
+test('the port comes from the flag, then PORT, then 8134', () => {
     assert.equal(resolvePort(5000, { PORT: '4000' }), 5000);
     assert.equal(resolvePort(undefined, { PORT: '4000' }), 4000);
-    assert.equal(resolvePort(undefined, {}), 3000);
-    assert.equal(resolvePort(undefined, { PORT: '' }), 3000);
+    assert.equal(resolvePort(undefined, {}), 8134);
+    assert.equal(resolvePort(undefined, { PORT: '' }), 8134);
 });
 
 test('an invalid PORT is an error', () => {
@@ -42,7 +42,7 @@ test('an invalid PORT is an error', () => {
         assert.throws(() => resolvePort(undefined, { PORT }), (err) => {
             assert.equal(err.name, 'AdharError');
             assert.match(err.message, /Invalid PORT value/);
-            assert.match(err.hint, /PORT=3000/);
+            assert.match(err.hint, /PORT=8134/);
             return true;
         }, PORT);
     }

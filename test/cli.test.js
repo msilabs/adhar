@@ -35,7 +35,7 @@ test('--help and a bare adhar print the help', () => {
         const result = adhar(args);
         assert.equal(result.code, 0);
         assert.match(result.stdout, /Usage:/);
-        assert.match(result.stdout, /adhar dev \[--port 3000\]/);
+        assert.match(result.stdout, /adhar dev \[--port 8134\]/);
     }
 });
 

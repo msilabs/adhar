@@ -1,7 +1,8 @@
 # আধার (Adhar)
 
+[![npm](https://img.shields.io/npm/v/@msilabs/adhar)](https://www.npmjs.com/package/@msilabs/adhar)
 [![CI](https://github.com/msilabs/adhar/actions/workflows/ci.yml/badge.svg)](https://github.com/msilabs/adhar/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![License: MIT](https://img.shields.io/npm/l/@msilabs/adhar)](LICENSE)
 
 **হালকা backend API ফ্রেমওয়ার্ক।** ফোল্ডারে সাধারণ JS ফাংশন লিখুন, পান JSON API: রাউটিং, middleware, ভ্যালিডেশন, service আর SQLite ডেটাবেস। Node.js ছাড়া আর কিছু লাগে না।
 
@@ -27,8 +28,8 @@ node adhar dev
 এবার আরেকটি টার্মিনালে:
 
 ```bash
-curl http://localhost:3000/notes
-curl -X POST http://localhost:3000/notes -H "Content-Type: application/json" -d '{"title":"প্রথম নোট"}'
+curl http://localhost:8134/notes
+curl -X POST http://localhost:8134/notes -H "Content-Type: application/json" -d '{"title":"প্রথম নোট"}'
 ```
 
 যেকোনো ফাইল বদলে সংরক্ষণ করলে সার্ভার নিজে থেকে নতুন করে চালু হয়।
@@ -294,7 +295,7 @@ CREATE TABLE users (
 পোর্ট আর গোপন মান থাকে প্রজেক্টের রুটের `.env` ফাইলে, আর পড়া যায় `ctx.env` দিয়ে:
 
 ```
-PORT=3000
+PORT=8134
 ADMIN_TOKEN=change-me
 ```
 
@@ -302,7 +303,7 @@ Adhar নিজে যে নামগুলো পড়ে:
 
 | নাম | কাজ | ডিফল্ট |
 | --- | --- | --- |
-| `PORT` | পোর্ট (`--port` দিলে সেটিই প্রাধান্য পায়) | `3000` |
+| `PORT` | পোর্ট (`--port` দিলে সেটিই প্রাধান্য পায়) | `8134` |
 | `CORS_ORIGIN` | কোন ওয়েবসাইট ব্রাউজার থেকে এই API ডাকতে পারবে | নেই (বন্ধ) |
 | `DATABASE_PATH` | SQLite ফাইলের পথ; `:memory:` চলে | `storage/app.db` |
 
@@ -321,8 +322,8 @@ CORS_ORIGIN=https://example.com, http://localhost:3000
 
 ```bash
 node adhar init [folder]               # উদাহরণসহ নতুন প্রজেক্ট (npx @msilabs/adhar init)
-node adhar dev [--port 3000]           # dev সার্ভার; ফাইল বদলালে নতুন করে চালু হয়
-node adhar start [--port 3000]         # production সার্ভার
+node adhar dev [--port 8134]           # dev সার্ভার; ফাইল বদলালে নতুন করে চালু হয়
+node adhar start [--port 8134]         # production সার্ভার
 node adhar routes                      # সব route-এর তালিকা
 node adhar migrate                     # বাকি migration চালানো
 node adhar new route "users/[id]"      # routes/users/[id]/route.js
@@ -396,6 +397,8 @@ Adhar-এর `.env`:
 ```
 CORS_ORIGIN=https://my-site.example.com
 ```
+
+নিজের কম্পিউটারে দুটো একসাথে চালানো যায়: `node alo dev` চলে `http://localhost:3000`-এ, `node adhar dev` চলে `http://localhost:8134`-এ। তখন Adhar-এর `.env`-এ লিখুন `CORS_ORIGIN=http://localhost:3000`, আর Alo থেকে ডাকুন `http://localhost:8134/notes`।
 
 Alo-র কোনো কম্পোনেন্টে:
 

@@ -161,8 +161,8 @@ export default ({ db, env, services }) => ({
 ## Commands
 
 ```
-node adhar dev [--port 3000]           dev server; restarts on change; runs pending migrations
-node adhar start [--port 3000]         production server; refuses to start while migrations are pending
+node adhar dev [--port 8134]           dev server; restarts on change; runs pending migrations
+node adhar start [--port 8134]         production server; refuses to start while migrations are pending
 node adhar migrate                     run pending migrations
 node adhar routes                      list every route
 node adhar new route "notes/[id]"      routes/notes/[id]/route.js
@@ -171,7 +171,12 @@ node adhar new service blog/posts      services/blog/posts.js
 node adhar new migration add-tags      migrations/<next number>-add-tags.sql
 ```
 
-Quote names that contain `[ ]` or `( )`, because the shell gives those characters a meaning.
+- Quote names that contain `[ ]` or `( )`, because the shell gives those characters a meaning.
+- The dev server listens on http://localhost:8134 unless `PORT` in `.env` or `--port` says otherwise.
+- After you change files, run `node adhar routes`. It loads every route and middleware file and exits with code 1 on a mistake. Services and migrations are checked when the server starts.
+- Errors show the file and a hint (for example "Did you mean `GET`?"). Read the hint and fix that exact spot.
+- Never edit `storage/`; it holds the database. Never put secrets in a route or service file; they go in `.env`, which is not in git.
+- Terminal messages are in English.
 
 ## Testing
 

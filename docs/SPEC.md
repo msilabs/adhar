@@ -408,7 +408,7 @@ export default ({ db }) => ({
 
 | নাম | কাজ | ডিফল্ট |
 | --- | --- | --- |
-| `PORT` | পোর্ট (`--port` প্রাধান্য পায়) | `3000` |
+| `PORT` | পোর্ট (`--port` প্রাধান্য পায়) | `8134` |
 | `CORS_ORIGIN` | অনুমোদিত origin; কমা দিয়ে একাধিক, বা `*` | নেই (CORS বন্ধ) |
 | `DATABASE_PATH` | SQLite ফাইল | `storage/app.db` |
 | `NODE_ENV` | `dev` বসায় `development`, `start` বসায় `production` (আগে থেকে না থাকলে) | |
@@ -449,8 +449,8 @@ export default ({ db }) => ({
 
 ```
 adhar init [folder]               create a new project
-adhar dev [--port 3000]           dev server, restarts on change
-adhar start [--port 3000]         production server
+adhar dev [--port 8134]           dev server, restarts on change
+adhar start [--port 8134]         production server
 adhar routes                      list all routes
 adhar migrate                     run pending migrations
 adhar new route "users/[id]"      routes/users/[id]/route.js
@@ -599,7 +599,7 @@ Alo-র README-র ক্রম অনুসরণ: Adhar কী → শুর�
 
 ## ২০. গ্রহণযোগ্যতার মানদণ্ড
 
-- `npx @msilabs/adhar init x && cd x && npm install && node adhar dev` কাজ করে, আর `curl localhost:3000/notes` JSON দেয়
+- `npx @msilabs/adhar init x && cd x && npm install && node adhar dev` কাজ করে, আর `curl localhost:8134/notes` JSON দেয়
 - অংশ ০-এর আটটি বিষয়ের প্রতিটি টেমপ্লেটে আছে আর টেস্টে ঢাকা
 - `package.json`-এ কোনো dependency নেই
 - Node 22.13, 24, 26-এ সব টেস্ট পাস

@@ -23,8 +23,8 @@ const HELP = `Adhar — a lightweight backend API framework (v${version})
 
 Usage:
   adhar init [folder]                create a new project
-  adhar dev [--port 3000]            dev server, restarts on change
-  adhar start [--port 3000]          production server
+  adhar dev [--port 8134]            dev server, restarts on change
+  adhar start [--port 8134]          production server
   adhar routes                       list all routes
   adhar migrate                      run pending migrations
   adhar new route "users/[id]"       routes/users/[id]/route.js
@@ -79,7 +79,7 @@ function parseArgs(argv) {
             if (value === undefined || value.startsWith('--')) {
                 throw new AdharError({
                     message: '`--port` needs a value.',
-                    hint: 'For example: `--port 3000`',
+                    hint: 'For example: `--port 8134`',
                 });
             }
             i++;
@@ -104,7 +104,7 @@ function validateFlags(command, flags) {
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
         throw new AdharError({
             message: `Invalid \`--port\` value \`${flags.port}\`.`,
-            hint: 'Use a whole number from 1 to 65535, e.g. `--port 3000`.',
+            hint: 'Use a whole number from 1 to 65535, e.g. `--port 8134`.',
         });
     }
     flags.port = port;

@@ -80,7 +80,7 @@ test('the new project has the right package.json, ignores and env files', (t) =>
     });
     assert.equal(read('.gitignore'), 'node_modules/\nstorage/\n.env\n');
     assert.match(read('.env.example'), /^# Copy this file to \.env/);
-    assert.match(read('.env'), /^PORT=3000\n/);
+    assert.match(read('.env'), /^PORT=8134\n/);
     assert.match(read('.env'), /ADMIN_TOKEN=change-me/);
     assert.match(read('adhar'), /^#!\/usr\/bin\/env node\n/);
     assert.match(read('adhar'), /require\('@msilabs\/adhar\/cli'\)/);

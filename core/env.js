@@ -13,16 +13,16 @@ function loadEnv(root, processEnv = {}) {
     return { ...fromFile, ...processEnv };
 }
 
-// `--port` wins over PORT, and PORT over 3000.
+// `--port` wins over PORT, and PORT over 8134.
 function resolvePort(flag, env) {
     if (flag !== undefined) return flag;
-    if (env.PORT === undefined || env.PORT === '') return 3000;
+    if (env.PORT === undefined || env.PORT === '') return 8134;
 
     const port = Number(env.PORT);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
         throw new AdharError({
             message: `Invalid PORT value \`${env.PORT}\`.`,
-            hint: 'Use a whole number from 1 to 65535, e.g. `PORT=3000` in `.env`.',
+            hint: 'Use a whole number from 1 to 65535, e.g. `PORT=8134` in `.env`.',
         });
     }
     return port;
