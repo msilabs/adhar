@@ -1,6 +1,7 @@
 'use strict';
 
 const { HttpError } = require('./errors.js');
+const { runChain } = require('./middleware.js');
 const { createPipeline } = require('./pipeline.js');
 const { loadRoutes } = require('./router.js');
 
@@ -8,25 +9,35 @@ const { loadRoutes } = require('./router.js');
 async function createApp(root, options = {}) {
     const router = loadRoutes(root);
 
+    function answerNotFound(ctx) {
+        if (!router.notFound) throw new HttpError(404, 'Not found');
+        ctx.status(404);
+        return router.notFound(ctx);
+    }
+
+    // Requests without a matching handler (404, 405, OPTIONS) still pass through routes/middleware.js.
     function handler(ctx) {
         const found = router.match(ctx.path);
-        if (!found) throw new HttpError(404, 'Not found');
+        if (!found) return runChain(router.rootChain, ctx, answerNotFound);
 
         const { route, params } = found;
         if (ctx.method === 'OPTIONS') {
-            ctx.status(204).header('allow', route.allow);
-            return undefined;
+            return runChain(router.rootChain, ctx, () => {
+                ctx.status(204).header('allow', route.allow);
+            });
         }
 
         const handle = route.handlers[ctx.method === 'HEAD' ? 'GET' : ctx.method];
         if (!handle) {
-            throw new HttpError(405, `Method ${ctx.method} is not allowed for ${ctx.path}`, {
-                headers: { allow: route.allow },
+            return runChain(router.rootChain, ctx, () => {
+                throw new HttpError(405, `Method ${ctx.method} is not allowed for ${ctx.path}`, {
+                    headers: { allow: route.allow },
+                });
             });
         }
 
         ctx.params = params;
-        return handle(ctx);
+        return runChain(route.chain, ctx, handle);
     }
 
     const pipeline = createPipeline({ ...options, handler });

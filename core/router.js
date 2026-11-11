@@ -29,7 +29,7 @@ function parseFolder(name, file) {
 }
 
 // Walks routes/ and lists every route.js with the URL segments its folders stand for.
-function scanFolder(root, dir, segments, routes) {
+function scanFolder(root, dir, segments, found) {
     const entries = fs.readdirSync(path.join(root, dir), { withFileTypes: true });
     entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
@@ -39,14 +39,16 @@ function scanFolder(root, dir, segments, routes) {
         if (entry.isDirectory()) {
             if (entry.name.startsWith('.')) continue;
             const segment = parseFolder(entry.name, file);
-            scanFolder(root, file, segment.type === 'group' ? segments : [...segments, segment], routes);
+            scanFolder(root, file, segment.type === 'group' ? segments : [...segments, segment], found);
             continue;
         }
 
         if (!entry.isFile() || !entry.name.endsWith('.js')) continue;
 
         if (entry.name === 'route.js') {
-            routes.push({ file, dir, segments });
+            found.routes.push({ file, dir, segments });
+        } else if (entry.name === 'middleware.js') {
+            found.middleware.set(dir, file);
         } else if (entry.name === 'not-found.js') {
             if (dir !== 'routes') {
                 throw new AdharError({
@@ -55,7 +57,8 @@ function scanFolder(root, dir, segments, routes) {
                     hint: 'Move it to `routes/not-found.js`.',
                 });
             }
-        } else if (entry.name !== 'middleware.js') {
+            found.notFound = file;
+        } else {
             throw new AdharError({
                 file,
                 message: `Unexpected file \`${entry.name}\` inside \`routes/\`.`,
@@ -109,6 +112,40 @@ function readHandlers(root, file) {
         });
     }
     return { handlers, schema: exported.schema };
+}
+
+// For middleware.js and not-found.js: the file's only export is one default function.
+function readDefaultFunction(root, file, example) {
+    const exported = loadModule(root, file);
+    const name = file.split('/').pop();
+
+    for (const key of Object.keys(exported)) {
+        if (key === 'default' || key === '__esModule') continue;
+        throw new AdharError({
+            file,
+            message: `Unknown export \`${key}\`.`,
+            hint: `\`${name}\` has a single export: \`${example}\`.`,
+        });
+    }
+    if (typeof exported.default !== 'function') {
+        throw new AdharError({
+            file,
+            message: `\`${name}\` must export one default function.`,
+            hint: `Write it as \`${example}\`.`,
+        });
+    }
+    return exported.default;
+}
+
+// The middleware of every folder from routes/ down to `dir`, outermost first.
+function chainFor(dir, middleware) {
+    const chain = [];
+    const parts = dir.split('/');
+    for (let depth = 1; depth <= parts.length; depth++) {
+        const found = middleware.get(parts.slice(0, depth).join('/'));
+        if (found) chain.push(found);
+    }
+    return chain;
 }
 
 function createNode() {
@@ -189,8 +226,19 @@ function loadRoutes(root) {
         });
     }
 
-    const routes = [];
-    scanFolder(root, 'routes', [], routes);
+    const found = { routes: [], middleware: new Map(), notFound: null };
+    scanFolder(root, 'routes', [], found);
+    const { routes } = found;
+
+    const middleware = new Map();
+    for (const [dir, file] of found.middleware) {
+        const run = readDefaultFunction(root, file, 'export default function (ctx, next) { return next(); }');
+        middleware.set(dir, { file, run });
+    }
+
+    const notFound = found.notFound
+        ? readDefaultFunction(root, found.notFound, 'export default function (ctx) { return { error: "Not found" }; }')
+        : null;
 
     const tree = createNode();
     for (const route of routes) {
@@ -202,6 +250,7 @@ function loadRoutes(root) {
         route.schema = schema;
         route.methods = METHODS.filter((method) => handlers[method]);
         route.allow = allowHeader(route.methods);
+        route.chain = chainFor(route.dir, middleware);
     }
 
     function match(urlPath) {
@@ -214,7 +263,7 @@ function loadRoutes(root) {
         return matchNode(tree, parts, 0, {});
     }
 
-    return { routes, match };
+    return { routes, match, rootChain: chainFor('routes', middleware), notFound };
 }
 
 module.exports = { METHODS, loadRoutes };
