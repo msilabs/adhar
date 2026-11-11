@@ -15,8 +15,14 @@ async function startDev(t, files, env) {
     const adhar = startAdhar(t, root, ['dev', '--port', String(port)], env);
     const base = `http://127.0.0.1:${port}`;
     const write = (file, content) => fs.writeFileSync(path.join(root, ...file.split('/')), content);
+    // The dev server may be between two workers for a moment, so a refused connection is tried again.
     const getJson = async (urlPath) => {
-        const res = await fetch(base + urlPath);
+        let res;
+        try {
+            res = await eventually(() => fetch(base + urlPath), 5000);
+        } catch (err) {
+            throw new Error(`GET ${urlPath} got no answer. Output:\n${adhar.output()}`, { cause: err });
+        }
         return { status: res.status, body: await res.json() };
     };
     return { root, port, adhar, base, write, getJson };
