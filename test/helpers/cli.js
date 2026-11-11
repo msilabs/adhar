@@ -81,4 +81,17 @@ function startAdhar(t, cwd, args, env = {}) {
     };
 }
 
-module.exports = { BIN, freePort, startAdhar };
+// Retries `check` until it stops throwing. For results that arrive after a restart.
+async function eventually(check, timeout = 20_000) {
+    const deadline = Date.now() + timeout;
+    for (;;) {
+        try {
+            return await check();
+        } catch (err) {
+            if (Date.now() > deadline) throw err;
+            await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+    }
+}
+
+module.exports = { BIN, freePort, startAdhar, eventually };

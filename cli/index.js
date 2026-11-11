@@ -120,6 +120,10 @@ async function runCommand(command, args, flags) {
         require('./migrate.js').migrate(process.cwd(), loadEnv(process.cwd(), process.env));
         return;
     }
+    if (command === 'dev') {
+        require('./dev.js').runDev({ root: process.cwd(), port: flags.port });
+        return;
+    }
     if (command === 'start') {
         await require('./serve.js').run({ root: process.cwd(), port: flags.port, dev: false });
         return;

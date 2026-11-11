@@ -219,13 +219,17 @@ function allowHeader(methods) {
     return allowed.join(', ');
 }
 
+// A folder is an Adhar project when it has routes/.
+function assertProject(root) {
+    if (fs.existsSync(path.join(root, 'routes'))) return;
+    throw new AdharError({
+        message: `No \`routes/\` folder in ${root}.`,
+        hint: 'Run this inside an Adhar project, or create one with `npx @msilabs/adhar init my-api`.',
+    });
+}
+
 function loadRoutes(root) {
-    if (!fs.existsSync(path.join(root, 'routes'))) {
-        throw new AdharError({
-            message: `No \`routes/\` folder in ${root}.`,
-            hint: 'Run this inside an Adhar project, or create one with `npx @msilabs/adhar init my-api`.',
-        });
-    }
+    assertProject(root);
 
     const found = { routes: [], middleware: new Map(), notFound: null };
     scanFolder(root, 'routes', [], found);
@@ -268,4 +272,4 @@ function loadRoutes(root) {
     return { routes, match, rootChain: chainFor('routes', middleware), notFound };
 }
 
-module.exports = { METHODS, loadRoutes };
+module.exports = { METHODS, assertProject, loadRoutes };
