@@ -24,7 +24,8 @@ function lowerCaseKeys(headers) {
 
 // The core never opens a port or prints: `handle` maps a plain request to a plain response,
 // `inject` wraps it for tests, and `listener` adapts it to node:http.
-function createPipeline({ handler, dev = false, env = {}, onError = () => {} }) {
+// `services` and `db` are handed to every ctx as they are.
+function createPipeline({ handler, dev = false, env = {}, services, db, onError = () => {} }) {
     const frozenEnv = Object.freeze({ ...env });
 
     // request: { method, url, headers (lower-case names), body (Buffer or undefined) }
@@ -40,7 +41,7 @@ function createPipeline({ handler, dev = false, env = {}, onError = () => {} }) 
             const { path, query } = parseUrl(request.url);
             const body = parseBody(request.headers['content-type'], request.body);
             const ctx = createContext(
-                { method: request.method, path, query, body, headers: request.headers, env: frozenEnv },
+                { method: request.method, path, query, body, headers: request.headers, env: frozenEnv, services, db },
                 response,
             );
             return toResponse(await handler(ctx), response);

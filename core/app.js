@@ -4,11 +4,14 @@ const { HttpError } = require('./errors.js');
 const { runChain } = require('./middleware.js');
 const { createPipeline } = require('./pipeline.js');
 const { loadRoutes } = require('./router.js');
+const { loadServices } = require('./services.js');
 const { applySchema } = require('./validate.js');
 
 // Loads and checks the whole project up front, so mistakes show at startup, not on the first request.
 async function createApp(root, options = {}) {
+    const env = Object.freeze({ ...options.env });
     const router = loadRoutes(root);
+    const services = loadServices(root, { env });
 
     function answerNotFound(ctx) {
         if (!router.notFound) throw new HttpError(404, 'Not found');
@@ -45,7 +48,7 @@ async function createApp(root, options = {}) {
         });
     }
 
-    const pipeline = createPipeline({ ...options, handler });
+    const pipeline = createPipeline({ ...options, env, services, handler });
 
     async function close() {}
 

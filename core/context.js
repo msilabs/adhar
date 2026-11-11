@@ -18,6 +18,8 @@ function createContext(request, response) {
         body: request.body,
         headers: request.headers,
         env: request.env,
+        services: request.services,
+        db: request.db,
         state: {},
 
         status(code) {
