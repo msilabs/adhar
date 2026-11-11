@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { AdharError, HttpError, suggest } = require('./errors.js');
 const { loadModule } = require('./load.js');
+const { compileSchema } = require('./validate.js');
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 const ROUTE_EXPORTS = [...METHODS, 'schema'];
@@ -250,6 +251,7 @@ function loadRoutes(root) {
         route.schema = schema;
         route.methods = METHODS.filter((method) => handlers[method]);
         route.allow = allowHeader(route.methods);
+        route.checks = compileSchema(route);
         route.chain = chainFor(route.dir, middleware);
     }
 

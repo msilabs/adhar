@@ -4,6 +4,7 @@ const { HttpError } = require('./errors.js');
 const { runChain } = require('./middleware.js');
 const { createPipeline } = require('./pipeline.js');
 const { loadRoutes } = require('./router.js');
+const { applySchema } = require('./validate.js');
 
 // Loads and checks the whole project up front, so mistakes show at startup, not on the first request.
 async function createApp(root, options = {}) {
@@ -27,7 +28,8 @@ async function createApp(root, options = {}) {
             });
         }
 
-        const handle = route.handlers[ctx.method === 'HEAD' ? 'GET' : ctx.method];
+        const method = ctx.method === 'HEAD' ? 'GET' : ctx.method;
+        const handle = route.handlers[method];
         if (!handle) {
             return runChain(router.rootChain, ctx, () => {
                 throw new HttpError(405, `Method ${ctx.method} is not allowed for ${ctx.path}`, {
@@ -37,7 +39,10 @@ async function createApp(root, options = {}) {
         }
 
         ctx.params = params;
-        return runChain(route.chain, ctx, handle);
+        return runChain(route.chain, ctx, () => {
+            applySchema(route.checks[method], ctx);
+            return handle(ctx);
+        });
     }
 
     const pipeline = createPipeline({ ...options, handler });
