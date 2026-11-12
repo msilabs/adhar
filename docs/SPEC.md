@@ -53,7 +53,7 @@
 
 ## ১. লক্ষ্য ও মূলনীতি
 
-Adhar একটি রানটাইম সার্ভার ফ্রেমওয়ার্ক, শুধু JSON API-র জন্য। HTML রেন্ডার করে না, স্ট্যাটিক ফাইল দেয় না; সেই কাজ Alo-র।
+Adhar একটি রানটাইম সার্ভার ফ্রেমওয়ার্ক, JSON API-র জন্য। HTML রেন্ডার করে না; সেই কাজ Alo-র। 1.2.0 থেকে একই প্রজেক্টের `web/` ফোল্ডারে একটি Alo সাইট থাকতে পারে, যার তৈরি ফাইল Adhar একই পোর্টে সার্ভ করে (অংশ ২২)।
 
 এই নীতিগুলো ভাঙা যাবে না:
 
@@ -84,11 +84,12 @@ Route, ডায়নামিক অংশ, route গ্রুপ, middleware,
 - File upload (multipart), catch-all route `[...path]`, rate limit, cookie helper
 - Alo + Adhar একসাথে চালানোর নির্দেশিকা
 - `/api`-র বাইরের route
+- সাইটের ফাইলে gzip/brotli আর `Range` request
 
 ### কখনো না
 
 - ORM বা query builder
-- HTML টেমপ্লেট রেন্ডার, স্ট্যাটিক ফাইল সার্ভ (Alo আছে)
+- HTML টেমপ্লেট রেন্ডার (Alo আছে)। স্ট্যাটিক ফাইল সার্ভ 1.2.0-তে এই তালিকা থেকে সরেছে, শুধু `web/dist/`-এর জন্য (অংশ ২২)
 - কনফিগ ফাইল, plugin সিস্টেম
 - ডেকোরেটর, dependency injection container, ক্লাস-ভিত্তিক controller
 - TypeScript বিল্ড ধাপ
@@ -450,8 +451,9 @@ export default ({ db }) => ({
 ## ১৪. CLI
 
 ```
-adhar init [folder]               create a new project
+adhar init [folder] [--web]       create a new project
 adhar dev [--port 8134]           dev server, restarts on change
+adhar build                       build the site in web/ into web/dist/ (অংশ ২২)
 adhar start [--port 8134]         production server
 adhar routes                      list all routes
 adhar migrate                     run pending migrations
@@ -459,6 +461,7 @@ adhar new route "users/[id]"      api/users/[id]/route.js
 adhar new middleware "(admin)"    api/(admin)/middleware.js
 adhar new service blog/posts      services/blog/posts.js
 adhar new migration create-posts  migrations/<next number>-create-posts.sql
+adhar web new component Card      web/components/Card.alo (অংশ ২২)
 adhar --help
 adhar --version
 ```
@@ -604,7 +607,7 @@ Alo-র README-র ক্রম অনুসরণ: Adhar কী → শুর�
 
 - `npx @msilabs/adhar init x && cd x && npm install && node adhar dev` কাজ করে, আর `curl localhost:8134/api/notes` JSON দেয়
 - অংশ ০-এর আটটি বিষয়ের প্রতিটি টেমপ্লেটে আছে আর টেস্টে ঢাকা
-- `package.json`-এ কোনো dependency নেই
+- `package.json`-এ কোনো runtime dependency নেই (`devDependencies`-এ শুধু টেস্টের জন্য `@msilabs/alo`)
 - Node 22.13, 24, 26-এ সব টেস্ট পাস
 - প্রতিটি চালুর-সময়ের ভুলে ফাইল আর ইঙ্গিত আছে
 - একটি AI সহকারী শুধু `AGENTS.md` পড়ে সঠিক route, service আর migration লিখতে পারে
@@ -635,3 +638,65 @@ Alo-র README-র ক্রম অনুসরণ: Adhar কী → শুর�
 | ১৮ | `[param]` একাধিক লেভেলে চলে (Alo-তে এক লেভেল) | API-তে `/users/:id/posts/:postId` সাধারণ |
 | ১৯ | auth helper, OpenAPI, upload, catch-all → পরে | আগে আসল ব্যবহার দেখা |
 | ২০ | ডকুমেন্টেশনে প্যারামিটারের নাম `ctx`; destructuring-ও চলে, method সহ | প্রচলিত আর ছোট; AI সহকারীরা চেনে (মালিক, ২০২৬-১১-১১) |
+
+---
+
+## ২২. Full stack: `web/` (1.2.0)
+
+`web/pages/` ফোল্ডার থাকলে প্রজেক্ট full stack: `web/`-এ একটি Alo সাইট, যা API-র সাথে এক পোর্টে চলে। ফোল্ডার না থাকলে কিছুই বদলায় না। কনফিগ নেই; মোড ঠিক হয় ফোল্ডার দেখে।
+
+মূল নিয়ম: Adhar-এর ভেতরে Alo থাকতে পারে, Alo-র ভেতরে Adhar কখনো নয়। Adhar Alo-কে `import` করে না; আলাদা প্রসেস হিসেবে চালায়।
+
+### গঠন
+
+- `web/`-এ Alo-র নিজের ফোল্ডারগুলো (`pages/`, `components/`, `data/`, `global/`, `public/`)। `web/`-এ `package.json`, `node_modules` বা `alo` লঞ্চার থাকে না।
+- `@msilabs/alo` থাকে রুটের `package.json`-এর `devDependencies`-এ: লাগে শুধু `dev` আর `build`-এ।
+- build-এর ফল `web/dist/` (git-এ যায় না)।
+
+### একটি request-এর পথ
+
+| মোড | ঠিকানা | যা ঘটে |
+| --- | --- | --- |
+| শুধু API | যেকোনো | আগের মতোই |
+| Full stack | `/api` বা `/api/…` | API-র pipeline; 404/405 সব JSON |
+| Full stack | বাকি সব | সাইটের ফাইল; pipeline, middleware আর CORS-এর কিছুই চলে না |
+
+- `/apix` যায় সাইটে। সাইটের অংশে শুধু `GET` আর `HEAD`; অন্য method-এ `405`, `Allow: GET, HEAD`।
+- `web/pages/api/` বা `web/public/api/` থাকলে চালুর সময় ভুল।
+- dev-এর "Did you mean `/api/notes`?" ইঙ্গিত full stack মোডে নেই।
+- Alo-র `--base` সমর্থিত নয়; সাইট সবসময় `/`-এ।
+
+### `web/dist/` সার্ভ (production)
+
+- `/` বা `/`-এ শেষ হওয়া ঠিকানা → সেই ফোল্ডারের `index.html`। ফোল্ডার আছে কিন্তু শেষে `/` নেই → `301`। কিছু না মিললে `404`: `web/dist/404.html` থাকলে সেটি, না থাকলে সাধারণ লেখা।
+- ঠিকানা decode করা যায় না → `400`। `..` দিয়ে `web/dist/`-এর বাইরে যাওয়া যায় না।
+- ফাইল প্রতি request-এ ডিস্ক থেকে মেলানো হয়, আর stream হয়ে যায়।
+- Header: `Content-Type` (এক্সটেনশন থেকে), `Content-Length`, `ETag` (`If-None-Match` মিললে `304`), `X-Content-Type-Options: nosniff`, আর `Cache-Control`: `assets/`-এর নিচে `public, max-age=31536000, immutable`, বাকি সব `no-cache`।
+- `app.inject()` সাইটের response-ও ফেরত দেয়: লেখার ফাইলে `body` string, JSON ফাইলে parse করা মান, বাকিতে `Buffer`।
+- নেই: gzip/brotli, `Range` request।
+
+### কমান্ড
+
+| কমান্ড | শুধু API | Full stack |
+| --- | --- | --- |
+| `adhar dev` | আগের মতো | Alo-র dev সার্ভারও চালায়; সব এক পোর্টে |
+| `adhar build` | ভুল | `web/`-এ `alo build`; ফল `web/dist/` |
+| `adhar start` | আগের মতো | `web/dist/` সার্ভ করে; `web/dist/index.html` না থাকলে চালু হয় না। নিজে build করে না |
+| `adhar web new …` | ভুল | Alo-র `new`, `web/`-এর ভেতরে |
+| `adhar init [folder] --web` | — | full stack টেমপ্লেট |
+
+- Alo খোঁজা হয় রুট থেকে উপরের দিকে `node_modules/@msilabs/alo/bin/alo.js`। না পেলে বা `1.1.0`-র নিচে হলে ভুল, ইঙ্গিতসহ।
+- `adhar web`-এ শুধু `new`; `adhar web dev`-এর মতো কিছু দিলে ভুল, সঠিক কমান্ডের ইঙ্গিতসহ।
+
+### `adhar dev`-এ এক পোর্ট
+
+- parent প্রসেস একটি ফাঁকা পোর্ট বেছে একবার `alo dev --port <N>` চালায় (`cwd` = `web/`)। API-র ফাইল বদলালে শুধু worker নতুন করে চালু হয়, Alo নয়।
+- worker `/api`-র বাইরের request Alo-র পোর্টে proxy করে; লাইভ রিলোডের SSE-ও সেই পথে আসে।
+- Alo-র আউটপুট থেকে তার নিজের ঠিকানার লাইন ছেঁকে বাদ দেওয়া হয়; টার্মিনালে একটিই ঠিকানা থাকে।
+- dev-এ বন্ধের সংকেতে সব সংযোগ সাথে সাথে বন্ধ হয়, কারণ খোলা SSE কখনো শেষ হয় না।
+- Alo চালু না থাকলে সাইটের ঠিকানায় `502`; API চলতে থাকে, আর একটি সতর্কবার্তা ছাপা হয়।
+- লগ: `start`-এ সব request; `dev`-এ `/api`-র request আর সাইটের `404`/`5xx`।
+
+### `init --web`
+
+শুধু-API টেমপ্লেটের সাথে: `web/pages/` (`layout.alo`, `page.alo`, `not-found.alo`), `web/components/Notes.alo` (`fetch('/api/notes')`), `web/global/theme.css`, `web/data/site.json`, `web/public/favicon.svg`; `package.json`-এ `build` script আর `devDependencies`-এ Alo; `.gitignore`-এ `web/dist/` আর `web/.alo/`; `.vscode/` আর `.gitattributes`; `AGENTS.md`-এ "web/" অংশ। `.env.example`-এ `CORS_ORIGIN` থাকে না।
