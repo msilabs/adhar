@@ -9,6 +9,7 @@ const { createPipeline } = require('./pipeline.js');
 const { loadRoutes } = require('./router.js');
 const { loadServices } = require('./services.js');
 const { applySchema } = require('./validate.js');
+const { isApiPath, loadWeb } = require('./web.js');
 
 // `mode` is 'run' (apply what is pending), 'check' (refuse to start while something is pending) or 'skip'.
 function prepareDatabase(root, db, mode) {
@@ -35,6 +36,8 @@ async function createApp(root, options = {}) {
     const env = Object.freeze({ ...options.env });
     const cors = createCors(env.CORS_ORIGIN);
     const router = loadRoutes(root);
+    // In a full stack project everything outside /api belongs to the site in web/.
+    const site = loadWeb(root, options.web);
     const db = createDb(databasePath(root, env));
     const services = loadServices(root, { db, env });
 
@@ -47,7 +50,7 @@ async function createApp(root, options = {}) {
 
     // In dev, a URL that only lacks the `/api` in front gets a pointer to the right one.
     function forgottenPrefix(urlPath) {
-        if (!options.dev || urlPath === '/api' || urlPath.startsWith('/api/')) return null;
+        if (!options.dev || site || urlPath === '/api' || urlPath.startsWith('/api/')) return null;
         const withPrefix = urlPath === '/' ? '/api' : '/api' + urlPath;
         return router.match(withPrefix) ? withPrefix : null;
     }
@@ -102,6 +105,7 @@ async function createApp(root, options = {}) {
         db,
         handler,
         baseHeaders: cors ? cors.headersFor : undefined,
+        outside: site?.respond ? (request) => (isApiPath(request.url) ? null : site.respond(request)) : undefined,
     });
 
     const warnings = [];
@@ -119,7 +123,7 @@ async function createApp(root, options = {}) {
         db.close();
     }
 
-    return { ...pipeline, routes: router.routes, warnings, close };
+    return { ...pipeline, routes: router.routes, fullStack: Boolean(site), warnings, close };
 }
 
 module.exports = { createApp };
