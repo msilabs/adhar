@@ -45,13 +45,23 @@ async function createApp(root, options = {}) {
         throw err;
     }
 
+    // In dev, a URL that only lacks the `/api` in front gets a pointer to the right one.
+    function forgottenPrefix(urlPath) {
+        if (!options.dev || urlPath === '/api' || urlPath.startsWith('/api/')) return null;
+        const withPrefix = urlPath === '/' ? '/api' : '/api' + urlPath;
+        return router.match(withPrefix) ? withPrefix : null;
+    }
+
     function answerNotFound(ctx) {
-        if (!router.notFound) throw new HttpError(404, 'Not found');
+        if (!router.notFound) {
+            const meant = forgottenPrefix(ctx.path);
+            throw new HttpError(404, meant ? `Not found. Did you mean \`${meant}\`?` : 'Not found');
+        }
         ctx.status(404);
         return router.notFound(ctx);
     }
 
-    // Requests without a matching handler (404, 405, OPTIONS) still pass through routes/middleware.js.
+    // Requests without a matching handler (404, 405, OPTIONS) still pass through api/middleware.js.
     function handler(ctx) {
         const found = router.match(ctx.path);
         if (!found) return runChain(router.rootChain, ctx, answerNotFound);
@@ -96,7 +106,7 @@ async function createApp(root, options = {}) {
 
     const warnings = [];
     if (router.routes.length === 0) {
-        warnings.push({ message: 'This project has no routes yet.', hint: 'Add one at routes/route.js.' });
+        warnings.push({ message: 'This project has no routes yet.', hint: 'Add one at api/route.js.' });
     }
     if (cors?.any && env.NODE_ENV === 'production') {
         warnings.push({

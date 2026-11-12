@@ -193,13 +193,13 @@ test('routes and middleware reach services through ctx', async (t) => {
     const root = makeProject(t, {
         'services/users.js': USERS,
         'services/auth/tokens.js': 'export default ({ env }) => ({ valid: (token) => token === env.TOKEN });',
-        'routes/middleware.js': `
+        'api/middleware.js': `
 export default function ({ headers, services, error }, next) {
     if (!services.auth.tokens.valid(headers['x-token'])) throw error(401);
     return next();
 }
 `,
-        'routes/users/[id]/route.js': `
+        'api/users/[id]/route.js': `
 export const schema = { GET: { params: { id: 'integer' } } };
 export function GET(ctx) {
     const user = ctx.services.users.find(ctx.params.id);
@@ -211,18 +211,18 @@ export function GET(ctx) {
     const app = await createApp(root, { env: { TOKEN: 'secret' } });
     const headers = { 'x-token': 'secret' };
 
-    assert.equal((await app.inject({ path: '/users/1' })).status, 401);
-    assert.deepEqual((await app.inject({ path: '/users/1', headers })).body, { id: 1, name: 'A' });
-    assert.equal((await app.inject({ path: '/users/2', headers })).status, 404);
+    assert.equal((await app.inject({ path: '/api/users/1' })).status, 401);
+    assert.deepEqual((await app.inject({ path: '/api/users/1', headers })).body, { id: 1, name: 'A' });
+    assert.equal((await app.inject({ path: '/api/users/2', headers })).status, 404);
 });
 
 test('a wrong service name in a route is a 500 with the suggestion', async (t) => {
     const root = makeProject(t, {
         'services/users.js': USERS,
-        'routes/route.js': 'export function GET(ctx) { return ctx.services.user.all(); }',
+        'api/route.js': 'export function GET(ctx) { return ctx.services.user.all(); }',
     });
     const app = await createApp(root, { dev: true });
-    const res = await app.inject({ path: '/' });
+    const res = await app.inject({ path: '/api' });
     assert.equal(res.status, 500);
     assert.equal(res.body.error.message, 'No service `user` in services/. Did you mean `users`?');
 });
@@ -230,7 +230,7 @@ test('a wrong service name in a route is a 500 with the suggestion', async (t) =
 test('a broken service fails when the app is created', async (t) => {
     const root = makeProject(t, {
         'services/users.js': 'export const all = () => [];',
-        'routes/route.js': 'export function GET() { return {}; }',
+        'api/route.js': 'export function GET() { return {}; }',
     });
     await assert.rejects(createApp(root), adharError('services/users.js', /Unknown export `all`/));
 });

@@ -7,8 +7,8 @@ const { createCors } = require('../core/cors.js');
 const { makeProject } = require('./helpers/project.js');
 
 const PROJECT = {
-    'routes/middleware.js': 'export default function (ctx, next) { if (!ctx.headers.authorization) throw ctx.error(401); return next(); }',
-    'routes/notes/route.js': 'export function GET() { return []; }\nexport function POST(ctx) { return ctx.body; }',
+    'api/middleware.js': 'export default function (ctx, next) { if (!ctx.headers.authorization) throw ctx.error(401); return next(); }',
+    'api/notes/route.js': 'export function GET() { return []; }\nexport function POST(ctx) { return ctx.body; }',
 };
 
 function appWith(t, env) {
@@ -59,7 +59,7 @@ test('a value that is not an origin is an error', () => {
 
 test('without CORS_ORIGIN no response has CORS headers', async (t) => {
     const app = await appWith(t, {});
-    const res = await app.inject({ path: '/notes', headers: { origin: 'https://app.example.com', authorization: 'x' } });
+    const res = await app.inject({ path: '/api/notes', headers: { origin: 'https://app.example.com', authorization: 'x' } });
     assert.equal(res.headers['access-control-allow-origin'], undefined);
     assert.equal(res.headers.vary, undefined);
 });
@@ -69,11 +69,11 @@ test('with CORS_ORIGIN every response to a listed origin is allowed, errors too'
     const headers = { origin: 'https://app.example.com', authorization: 'x' };
 
     const requests = [
-        { path: '/notes', headers },
-        { path: '/nope', headers },
-        { path: '/notes', headers: { origin: headers.origin } },
-        { method: 'DELETE', path: '/notes', headers },
-        { method: 'POST', path: '/notes', headers: { ...headers, 'content-type': 'application/json' }, body: '{"a":' },
+        { path: '/api/notes', headers },
+        { path: '/api/nope', headers },
+        { path: '/api/notes', headers: { origin: headers.origin } },
+        { method: 'DELETE', path: '/api/notes', headers },
+        { method: 'POST', path: '/api/notes', headers: { ...headers, 'content-type': 'application/json' }, body: '{"a":' },
     ];
     const statuses = [];
     for (const request of requests) {
@@ -87,7 +87,7 @@ test('with CORS_ORIGIN every response to a listed origin is allowed, errors too'
 
 test('another origin still gets its answer, but no allow header', async (t) => {
     const app = await appWith(t, { CORS_ORIGIN: 'https://app.example.com' });
-    const res = await app.inject({ path: '/notes', headers: { origin: 'https://evil.example', authorization: 'x' } });
+    const res = await app.inject({ path: '/api/notes', headers: { origin: 'https://evil.example', authorization: 'x' } });
     assert.equal(res.status, 200);
     assert.equal(res.headers['access-control-allow-origin'], undefined);
     assert.equal(res.headers.vary, 'Origin');
@@ -97,7 +97,7 @@ test('a preflight is answered without running middleware', async (t) => {
     const app = await appWith(t, { CORS_ORIGIN: 'https://app.example.com' });
     const res = await app.inject({
         method: 'OPTIONS',
-        path: '/notes',
+        path: '/api/notes',
         headers: {
             origin: 'https://app.example.com',
             'access-control-request-method': 'POST',
@@ -115,7 +115,7 @@ test('a preflight for an unknown path is a 404', async (t) => {
     const app = await appWith(t, { CORS_ORIGIN: '*' });
     const res = await app.inject({
         method: 'OPTIONS',
-        path: '/nope',
+        path: '/api/nope',
         headers: { origin: 'https://a.example', 'access-control-request-method': 'GET', authorization: 'x' },
     });
     assert.equal(res.status, 404);
@@ -124,7 +124,7 @@ test('a preflight for an unknown path is a 404', async (t) => {
 
 test('a plain OPTIONS request is not a preflight', async (t) => {
     const app = await appWith(t, { CORS_ORIGIN: '*' });
-    const res = await app.inject({ method: 'OPTIONS', path: '/notes', headers: { authorization: 'x' } });
+    const res = await app.inject({ method: 'OPTIONS', path: '/api/notes', headers: { authorization: 'x' } });
     assert.equal(res.status, 204);
     assert.equal(res.headers.allow, 'GET, POST, HEAD, OPTIONS');
     assert.equal(res.headers['access-control-allow-methods'], undefined);
@@ -142,6 +142,6 @@ test('the app warns about * in production and about a project without routes', a
     assert.deepEqual((await appWith(t, { CORS_ORIGIN: '*', NODE_ENV: 'development' })).warnings, []);
     assert.deepEqual((await appWith(t, { CORS_ORIGIN: 'https://a.example', NODE_ENV: 'production' })).warnings, []);
 
-    const empty = await createApp(makeProject(t, { 'routes/README.md': '' }));
+    const empty = await createApp(makeProject(t, { 'api/README.md': '' }));
     assert.match(empty.warnings[0].message, /no routes yet/);
 });

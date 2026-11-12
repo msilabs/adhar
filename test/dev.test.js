@@ -31,84 +31,84 @@ async function startDev(t, files, env) {
 test('adhar dev serves the project in dev mode and runs migrations', async (t) => {
     const { adhar, getJson, port, root } = await startDev(t, {
         'migrations/001-create-notes.sql': 'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT);',
-        'routes/route.js': 'export function GET(ctx) { return { mode: ctx.env.NODE_ENV }; }',
-        'routes/notes/route.js': 'export function GET(ctx) { return ctx.db.all("SELECT * FROM notes"); }',
-        'routes/boom/route.js': 'export function GET() { throw new Error("visible detail"); }',
+        'api/route.js': 'export function GET(ctx) { return { mode: ctx.env.NODE_ENV }; }',
+        'api/notes/route.js': 'export function GET(ctx) { return ctx.db.all("SELECT * FROM notes"); }',
+        'api/boom/route.js': 'export function GET() { throw new Error("visible detail"); }',
     });
     await adhar.waitFor(new RegExp(`Adhar is running at http://localhost:${port} \\(dev\\)`));
 
-    assert.deepEqual(await getJson('/'), { status: 200, body: { mode: 'development' } });
-    assert.deepEqual(await getJson('/notes'), { status: 200, body: [] });
+    assert.deepEqual(await getJson('/api'), { status: 200, body: { mode: 'development' } });
+    assert.deepEqual(await getJson('/api/notes'), { status: 200, body: [] });
     assert.equal(fs.existsSync(path.join(root, 'storage', 'app.db')), true);
 
-    const failed = await getJson('/boom');
+    const failed = await getJson('/api/boom');
     assert.equal(failed.status, 500);
     assert.equal(failed.body.error.message, 'visible detail');
     assert.match(failed.body.error.stack, /Error: visible detail/);
 
-    await adhar.waitFor(/GET \/boom 500 \d+ms/);
-    assert.match(adhar.output(), /GET \/ 200 \d+ms/);
+    await adhar.waitFor(/GET \/api\/boom 500 \d+ms/);
+    assert.match(adhar.output(), /GET \/api 200 \d+ms/);
 });
 
 test('changing a route file restarts the server with the new code', async (t) => {
-    const { adhar, getJson, write } = await startDev(t, { 'routes/route.js': HELLO });
+    const { adhar, getJson, write } = await startDev(t, { 'api/route.js': HELLO });
     await adhar.waitFor(/Adhar is running/);
-    assert.deepEqual((await getJson('/')).body, { version: 1 });
+    assert.deepEqual((await getJson('/api')).body, { version: 1 });
 
-    write('routes/route.js', 'export function GET() { return { version: 2 }; }');
-    await eventually(async () => assert.deepEqual((await getJson('/')).body, { version: 2 }));
-    assert.match(adhar.output(), /routes\/route\.js changed, restarting\.\.\./);
+    write('api/route.js', 'export function GET() { return { version: 2 }; }');
+    await eventually(async () => assert.deepEqual((await getJson('/api')).body, { version: 2 }));
+    assert.match(adhar.output(), /api\/route\.js changed, restarting\.\.\./);
 });
 
 test('a new route, service and migration are picked up', async (t) => {
-    const { adhar, getJson, write, root } = await startDev(t, { 'routes/route.js': HELLO });
+    const { adhar, getJson, write, root } = await startDev(t, { 'api/route.js': HELLO });
     await adhar.waitFor(/Adhar is running/);
 
     fs.mkdirSync(path.join(root, 'migrations'));
     write('migrations/001-create-notes.sql', "CREATE TABLE notes (title TEXT);\nINSERT INTO notes (title) VALUES ('first');");
     fs.mkdirSync(path.join(root, 'services'));
     write('services/notes.js', 'export default ({ db }) => ({ all: () => db.all("SELECT title FROM notes") });');
-    fs.mkdirSync(path.join(root, 'routes', 'notes'));
-    write('routes/notes/route.js', 'export function GET(ctx) { return ctx.services.notes.all(); }');
+    fs.mkdirSync(path.join(root, 'api', 'notes'));
+    write('api/notes/route.js', 'export function GET(ctx) { return ctx.services.notes.all(); }');
 
-    await eventually(async () => assert.deepEqual(await getJson('/notes'), { status: 200, body: [{ title: 'first' }] }));
+    await eventually(async () => assert.deepEqual(await getJson('/api/notes'), { status: 200, body: [{ title: 'first' }] }));
 
     // The folders did not exist at the start; a later change inside one must still be seen.
     write('services/notes.js', 'export default () => ({ all: () => ["changed"] });');
-    await eventually(async () => assert.deepEqual((await getJson('/notes')).body, ['changed']));
+    await eventually(async () => assert.deepEqual((await getJson('/api/notes')).body, ['changed']));
 });
 
 test('a mistake is shown, and fixing it brings the server back', async (t) => {
-    const { adhar, getJson, write } = await startDev(t, { 'routes/route.js': HELLO });
+    const { adhar, getJson, write } = await startDev(t, { 'api/route.js': HELLO });
     await adhar.waitFor(/Adhar is running/);
 
-    write('routes/route.js', 'export function get() { return {}; }');
+    write('api/route.js', 'export function get() { return {}; }');
     await adhar.waitFor(/Unknown export `get`[\s\S]*Did you mean `GET`\?[\s\S]*Waiting for a file to change/);
     assert.equal(adhar.child.exitCode, null);
 
-    write('routes/route.js', 'export function GET() { return { fixed: true }; }');
-    await eventually(async () => assert.deepEqual((await getJson('/')).body, { fixed: true }));
+    write('api/route.js', 'export function GET() { return { fixed: true }; }');
+    await eventually(async () => assert.deepEqual((await getJson('/api')).body, { fixed: true }));
 });
 
 test('a mistake at the first start does not end adhar dev', async (t) => {
-    const { adhar, getJson, write } = await startDev(t, { 'routes/route.js': 'export const schema = {};' });
+    const { adhar, getJson, write } = await startDev(t, { 'api/route.js': 'export const schema = {};' });
     await adhar.waitFor(/exports no handlers[\s\S]*Waiting for a file to change/);
     assert.equal(adhar.child.exitCode, null);
 
-    write('routes/route.js', HELLO);
-    await eventually(async () => assert.deepEqual((await getJson('/')).body, { version: 1 }));
+    write('api/route.js', HELLO);
+    await eventually(async () => assert.deepEqual((await getJson('/api')).body, { version: 1 }));
 });
 
 test('changing .env restarts the server', async (t) => {
     const { adhar, getJson, write } = await startDev(t, {
-        'routes/route.js': 'export function GET(ctx) { return { greeting: ctx.env.GREETING ?? null }; }',
+        'api/route.js': 'export function GET(ctx) { return { greeting: ctx.env.GREETING ?? null }; }',
         '.env': 'GREETING=hello\n',
     });
     await adhar.waitFor(/Adhar is running/);
-    assert.deepEqual((await getJson('/')).body, { greeting: 'hello' });
+    assert.deepEqual((await getJson('/api')).body, { greeting: 'hello' });
 
     write('.env', 'GREETING=salam\n');
-    await eventually(async () => assert.deepEqual((await getJson('/')).body, { greeting: 'salam' }));
+    await eventually(async () => assert.deepEqual((await getJson('/api')).body, { greeting: 'salam' }));
 });
 
 test('adhar dev outside a project fails at once', async (t) => {
@@ -116,26 +116,44 @@ test('adhar dev outside a project fails at once', async (t) => {
     const adhar = startAdhar(t, root, ['dev']);
     const { code } = await adhar.exited;
     assert.equal(code, 1);
-    assert.match(adhar.output(), /No `routes\/` folder/);
+    assert.match(adhar.output(), /No `api\/` folder/);
 });
 
 // Windows has no signals: the process there is ended at once, so there is nothing to observe.
 test('stopping adhar dev also stops the worker', { skip: process.platform === 'win32' }, async (t) => {
-    const { adhar, base } = await startDev(t, { 'routes/route.js': HELLO });
+    const { adhar, base } = await startDev(t, { 'api/route.js': HELLO });
     await adhar.waitFor(/Adhar is running/);
 
     adhar.child.kill('SIGTERM');
     const { code } = await adhar.exited;
     assert.equal(code, 0);
-    await eventually(() => assert.rejects(fetch(base + '/')), 5000);
+    await eventually(() => assert.rejects(fetch(base + '/api')), 5000);
 });
 
 test('the worker does not outlive a killed adhar dev', async (t) => {
-    const { adhar, base } = await startDev(t, { 'routes/route.js': HELLO });
+    const { adhar, base } = await startDev(t, { 'api/route.js': HELLO });
     await adhar.waitFor(/Adhar is running/);
-    assert.equal((await fetch(base + '/')).status, 200);
+    assert.equal((await fetch(base + '/api')).status, 200);
 
     adhar.child.kill('SIGKILL');
     await adhar.exited;
-    await eventually(() => assert.rejects(fetch(base + '/')), 10_000);
+    await eventually(() => assert.rejects(fetch(base + '/api')), 10_000);
+});
+
+test('adhar dev in a project that still has routes/ explains the rename', async (t) => {
+    const root = makeProject(t, { 'routes/notes/route.js': 'export function GET() { return []; }' });
+    const adhar = startAdhar(t, root, ['dev']);
+    const { code } = await adhar.exited;
+    assert.equal(code, 1);
+    assert.match(adhar.output(), /✖ Error: routes\/\n  The `routes\/` folder is now `api\/`\./);
+    assert.match(adhar.output(), /`\/notes` becomes `\/api\/notes`/);
+});
+
+test('adhar dev points a URL without /api to the right one', async (t) => {
+    const { adhar, getJson } = await startDev(t, { 'api/notes/route.js': 'export function GET() { return []; }' });
+    await adhar.waitFor(/Adhar is running/);
+    assert.deepEqual(await getJson('/notes'), {
+        status: 404,
+        body: { error: { status: 404, message: 'Not found. Did you mean `/api/notes`?' } },
+    });
 });

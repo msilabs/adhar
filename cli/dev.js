@@ -7,7 +7,7 @@ const { assertProject } = require('../core/router.js');
 const log = require('./log.js');
 
 const WORKER = path.join(__dirname, 'worker.js');
-const WATCHED_FOLDERS = ['routes', 'services', 'migrations'];
+const WATCHED_FOLDERS = ['api', 'services', 'migrations'];
 const DEBOUNCE = 100;
 const KILL_AFTER = 2000;
 

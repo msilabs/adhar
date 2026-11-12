@@ -129,36 +129,36 @@ export default ({ db }) => ({
     create: (title) => db.get('INSERT INTO notes (title) VALUES (?) RETURNING *', title),
 });
 `,
-    'routes/notes/route.js': `
+    'api/notes/route.js': `
 export const schema = { POST: { body: { title: 'string' } } };
 export function GET(ctx) { return ctx.services.notes.all(); }
 export function POST(ctx) { ctx.status(201); return ctx.services.notes.create(ctx.body.title); }
 `,
-    'routes/count/route.js': 'export function GET(ctx) { return ctx.db.get("SELECT COUNT(*) AS n FROM notes"); }',
+    'api/count/route.js': 'export function GET(ctx) { return ctx.db.get("SELECT COUNT(*) AS n FROM notes"); }',
 };
 
 test('an app migrates on start and gives db to routes and services', async (t) => {
     const root = makeProject(t, NOTES_PROJECT);
     const app = await createApp(root, { env: { DATABASE_PATH: ':memory:' } });
 
-    const created = await app.inject({ method: 'POST', path: '/notes', body: { title: 'Buy milk' } });
+    const created = await app.inject({ method: 'POST', path: '/api/notes', body: { title: 'Buy milk' } });
     assert.equal(created.status, 201);
     assert.deepEqual(created.body, { id: 1, title: 'Buy milk' });
-    assert.deepEqual((await app.inject({ path: '/notes' })).body, [{ id: 1, title: 'Buy milk' }]);
-    assert.deepEqual((await app.inject({ path: '/count' })).body, { n: 1 });
+    assert.deepEqual((await app.inject({ path: '/api/notes' })).body, [{ id: 1, title: 'Buy milk' }]);
+    assert.deepEqual((await app.inject({ path: '/api/count' })).body, { n: 1 });
     await app.close();
 });
 
 test('an SQL error in a handler is a 500, hidden in production', async (t) => {
     const root = makeProject(t, {
-        'routes/route.js': 'export function GET(ctx) { return ctx.db.all("SELECT * FROM missing"); }',
+        'api/route.js': 'export function GET(ctx) { return ctx.db.all("SELECT * FROM missing"); }',
     });
     const reported = [];
     const app = await createApp(root, {
         env: { DATABASE_PATH: ':memory:' },
         onError: (err) => reported.push(err.message),
     });
-    const res = await app.inject({ path: '/' });
+    const res = await app.inject({ path: '/api' });
     assert.deepEqual(res.body, { error: { status: 500, message: 'Internal server error' } });
     assert.match(reported[0], /no such table: missing \(SQL: SELECT \* FROM missing\)/);
     await app.close();
@@ -168,19 +168,19 @@ test('the default database is storage/app.db and keeps its data', async (t) => {
     const root = makeProject(t, NOTES_PROJECT);
 
     const first = await createApp(root);
-    await first.inject({ method: 'POST', path: '/notes', body: { title: 'kept' } });
+    await first.inject({ method: 'POST', path: '/api/notes', body: { title: 'kept' } });
     await first.close();
     assert.equal(fs.existsSync(path.join(root, 'storage', 'app.db')), true);
 
     const second = await createApp(root);
-    assert.deepEqual((await second.inject({ path: '/notes' })).body, [{ id: 1, title: 'kept' }]);
+    assert.deepEqual((await second.inject({ path: '/api/notes' })).body, [{ id: 1, title: 'kept' }]);
     await second.close();
 });
 
 test('a project that never uses the database gets no storage folder', async (t) => {
-    const root = makeProject(t, { 'routes/route.js': 'export function GET() { return {}; }' });
+    const root = makeProject(t, { 'api/route.js': 'export function GET() { return {}; }' });
     const app = await createApp(root);
-    await app.inject({ path: '/' });
+    await app.inject({ path: '/api' });
     await app.close();
     assert.equal(fs.existsSync(path.join(root, 'storage')), false);
 });
@@ -198,7 +198,7 @@ test('in check mode the app refuses to start while migrations are pending', asyn
     db.close();
 
     const app = await createApp(root, { migrations: 'check' });
-    assert.equal((await app.inject({ path: '/notes' })).status, 200);
+    assert.equal((await app.inject({ path: '/api/notes' })).status, 200);
     await app.close();
 });
 
@@ -210,7 +210,7 @@ test('check mode names a single pending migration', async (t) => {
 test('a failing migration stops the app from starting', async (t) => {
     const root = makeProject(t, {
         'migrations/001-broken.sql': 'CREATE TABLE (;',
-        'routes/route.js': 'export function GET() { return {}; }',
+        'api/route.js': 'export function GET() { return {}; }',
     });
     await assert.rejects(
         createApp(root, { env: { DATABASE_PATH: ':memory:' } }),

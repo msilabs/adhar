@@ -9,7 +9,7 @@ const { makeProject } = require('./helpers/project.js');
 // Builds the route shape that compileSchema expects.
 function route(schema, { methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], params = [] } = {}) {
     return {
-        file: 'routes/users/route.js',
+        file: 'api/users/route.js',
         schema,
         handlers: Object.fromEntries(methods.map((method) => [method, () => {}])),
         segments: params.map((name) => ({ type: 'param', name })),
@@ -37,7 +37,7 @@ function fieldsOf(schema, method, input, options) {
 function schemaError(message, hint) {
     return (err) => {
         assert.equal(err.name, 'AdharError');
-        assert.equal(err.file, 'routes/users/route.js');
+        assert.equal(err.file, 'api/users/route.js');
         assert.match(err.message, message);
         if (hint) assert.match(err.hint, hint);
         return true;
@@ -273,19 +273,19 @@ export function POST(ctx) {
 
 test('a route with a schema answers 422 before the handler runs', async (t) => {
     const root = makeProject(t, {
-        'routes/notes/route.js': NOTES_ROUTE,
-        'routes/notes/[id]/route.js': `
+        'api/notes/route.js': NOTES_ROUTE,
+        'api/notes/[id]/route.js': `
 export const schema = { GET: { params: { id: 'integer' } } };
 export function GET(ctx) { return { id: ctx.params.id, type: typeof ctx.params.id }; }
 `,
     });
     const app = await createApp(root);
 
-    const created = await app.inject({ method: 'POST', path: '/notes', body: { title: 'Buy milk', owner: 'me' } });
+    const created = await app.inject({ method: 'POST', path: '/api/notes', body: { title: 'Buy milk', owner: 'me' } });
     assert.equal(created.status, 201);
     assert.deepEqual(created.body, { title: 'Buy milk' });
 
-    const invalid = await app.inject({ method: 'POST', path: '/notes', body: { done: 'yes' } });
+    const invalid = await app.inject({ method: 'POST', path: '/api/notes', body: { done: 'yes' } });
     assert.equal(invalid.status, 422);
     assert.deepEqual(invalid.body, {
         error: {
@@ -295,38 +295,38 @@ export function GET(ctx) { return { id: ctx.params.id, type: typeof ctx.params.i
         },
     });
 
-    assert.deepEqual((await app.inject({ path: '/notes?page=3' })).body, { page: 3 });
-    assert.equal((await app.inject({ path: '/notes?page=three' })).status, 422);
-    assert.deepEqual((await app.inject({ path: '/notes/7' })).body, { id: 7, type: 'number' });
-    assert.equal((await app.inject({ path: '/notes/seven' })).status, 422);
+    assert.deepEqual((await app.inject({ path: '/api/notes?page=3' })).body, { page: 3 });
+    assert.equal((await app.inject({ path: '/api/notes?page=three' })).status, 422);
+    assert.deepEqual((await app.inject({ path: '/api/notes/7' })).body, { id: 7, type: 'number' });
+    assert.equal((await app.inject({ path: '/api/notes/seven' })).status, 422);
 });
 
 test('HEAD uses the GET schema', async (t) => {
-    const root = makeProject(t, { 'routes/notes/route.js': NOTES_ROUTE });
+    const root = makeProject(t, { 'api/notes/route.js': NOTES_ROUTE });
     const app = await createApp(root);
-    assert.equal((await app.inject({ method: 'HEAD', path: '/notes?page=x' })).status, 422);
-    assert.equal((await app.inject({ method: 'HEAD', path: '/notes?page=1' })).status, 200);
+    assert.equal((await app.inject({ method: 'HEAD', path: '/api/notes?page=x' })).status, 422);
+    assert.equal((await app.inject({ method: 'HEAD', path: '/api/notes?page=1' })).status, 200);
 });
 
 test('validation runs after the middleware', async (t) => {
     const root = makeProject(t, {
-        'routes/middleware.js': 'export default function (ctx, next) { if (!ctx.headers.authorization) throw ctx.error(401); return next(); }',
-        'routes/notes/route.js': NOTES_ROUTE,
+        'api/middleware.js': 'export default function (ctx, next) { if (!ctx.headers.authorization) throw ctx.error(401); return next(); }',
+        'api/notes/route.js': NOTES_ROUTE,
     });
     const app = await createApp(root);
 
-    assert.equal((await app.inject({ method: 'POST', path: '/notes', body: {} })).status, 401);
-    const res = await app.inject({ method: 'POST', path: '/notes', body: {}, headers: { authorization: 'x' } });
+    assert.equal((await app.inject({ method: 'POST', path: '/api/notes', body: {} })).status, 401);
+    const res = await app.inject({ method: 'POST', path: '/api/notes', body: {}, headers: { authorization: 'x' } });
     assert.equal(res.status, 422);
 });
 
 test('a broken schema fails when the app is created', async (t) => {
     const root = makeProject(t, {
-        'routes/notes/route.js': "export const schema = { POST: { body: { title: 'text' } } };\nexport function POST() {}",
+        'api/notes/route.js': "export const schema = { POST: { body: { title: 'text' } } };\nexport function POST() {}",
     });
     await assert.rejects(createApp(root), (err) => {
         assert.equal(err.name, 'AdharError');
-        assert.equal(err.file, 'routes/notes/route.js');
+        assert.equal(err.file, 'api/notes/route.js');
         assert.match(err.message, /Unknown type "text"/);
         return true;
     });

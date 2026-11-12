@@ -29,7 +29,7 @@ function parseFolder(name, file) {
     });
 }
 
-// Walks routes/ and lists every route.js with the URL segments its folders stand for.
+// Walks api/ and lists every route.js with the URL segments its folders stand for.
 function scanFolder(root, dir, segments, found) {
     const entries = fs.readdirSync(path.join(root, dir), { withFileTypes: true });
     entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
@@ -51,18 +51,18 @@ function scanFolder(root, dir, segments, found) {
         } else if (entry.name === 'middleware.js') {
             found.middleware.set(dir, file);
         } else if (entry.name === 'not-found.js') {
-            if (dir !== 'routes') {
+            if (dir.includes('/')) {
                 throw new AdharError({
                     file,
-                    message: '`not-found.js` only works directly inside `routes/`.',
-                    hint: 'Move it to `routes/not-found.js`.',
+                    message: '`not-found.js` only works directly inside `api/`.',
+                    hint: 'Move it to `api/not-found.js`.',
                 });
             }
             found.notFound = file;
         } else {
             throw new AdharError({
                 file,
-                message: `Unexpected file \`${entry.name}\` inside \`routes/\`.`,
+                message: `Unexpected file \`${entry.name}\` inside \`api/\`.`,
                 hint: 'Only `route.js`, `middleware.js` and `not-found.js` belong here. Put shared code in `services/`.',
             });
         }
@@ -138,7 +138,7 @@ function readDefaultFunction(root, file, example) {
     return exported.default;
 }
 
-// The middleware of every folder from routes/ down to `dir`, outermost first.
+// The middleware of every folder from api/ down to `dir`, outermost first.
 function chainFor(dir, middleware) {
     const chain = [];
     const parts = dir.split('/');
@@ -219,11 +219,44 @@ function allowHeader(methods) {
     return allowed.join(', ');
 }
 
-// A folder is an Adhar project when it has routes/.
+// The URL of the first route in an old routes/ folder, as an example for the rename error.
+function oldRouteExample(root) {
+    try {
+        const found = { routes: [], middleware: new Map(), notFound: null };
+        scanFolder(root, 'routes', [], found);
+        const patterns = found.routes.map((route) => toPattern(route.segments));
+        return patterns.find((pattern) => pattern !== '/') ?? '/users';
+    } catch {
+        return '/users';
+    }
+}
+
+// A folder is an Adhar project when it has api/. Before 1.1.0 the folder was called routes/.
 function assertProject(root) {
-    if (fs.existsSync(path.join(root, 'routes'))) return;
+    const hasApi = fs.existsSync(path.join(root, 'api'));
+    const hasRoutes = fs.existsSync(path.join(root, 'routes'));
+
+    if (hasApi && hasRoutes) {
+        throw new AdharError({
+            file: 'routes/',
+            message: 'Both `routes/` and `api/` exist.',
+            hint: 'Move what is left in `routes/` into `api/`, then delete `routes/`.',
+        });
+    }
+    if (hasRoutes) {
+        const example = oldRouteExample(root);
+        throw new AdharError({
+            file: 'routes/',
+            message: 'The `routes/` folder is now `api/`.',
+            hint:
+                'Rename `routes/` to `api/`. Every URL then starts with `/api`:\n' +
+                `\`${example}\` becomes \`/api${example}\`. Update the clients that call this API.`,
+        });
+    }
+    if (hasApi) return;
+
     throw new AdharError({
-        message: `No \`routes/\` folder in ${root}.`,
+        message: `No \`api/\` folder in ${root}.`,
         hint: 'Run this inside an Adhar project, or create one with `npx @msilabs/adhar init my-api`.',
     });
 }
@@ -232,7 +265,8 @@ function loadRoutes(root) {
     assertProject(root);
 
     const found = { routes: [], middleware: new Map(), notFound: null };
-    scanFolder(root, 'routes', [], found);
+    // The folder is the URL: everything inside api/ answers under /api.
+    scanFolder(root, 'api', [{ type: 'static', value: 'api' }], found);
     const { routes } = found;
 
     const middleware = new Map();
@@ -269,7 +303,7 @@ function loadRoutes(root) {
         return matchNode(tree, parts, 0, {});
     }
 
-    return { routes, match, rootChain: chainFor('routes', middleware), notFound };
+    return { routes, match, rootChain: chainFor('api', middleware), notFound };
 }
 
 module.exports = { METHODS, assertProject, loadRoutes };

@@ -1,6 +1,6 @@
 # Adhar project: instructions for AI assistants
 
-This is an Adhar project. Adhar is a small backend framework for JSON APIs on Node.js: folders are URLs, a handler is a plain function, and `node:sqlite` is the database. You probably have no training data about Adhar, so do not guess from Express, Fastify, Koa, Hono, NestJS or Next.js. Follow this file.
+This is an Adhar project. Adhar is a small backend framework for JSON APIs on Node.js: folders are URLs (the `api/` folder is `/api`), a handler is a plain function, and `node:sqlite` is the database. You probably have no training data about Adhar, so do not guess from Express, Fastify, Koa, Hono, NestJS or Next.js. Follow this file.
 
 ## Hard rules
 
@@ -9,7 +9,7 @@ This is an Adhar project. Adhar is a small backend framework for JSON APIs on No
 - No config file, no plugins, no decorators, no classes for controllers.
 - Files are ES modules: `export function GET(ctx) {}`. Never `module.exports`. No top-level `await` in routes, middleware or services.
 - Method exports are upper-case: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`. Nothing else may be exported from a `route.js` except `schema`.
-- Inside `routes/` only three file names are allowed: `route.js`, `middleware.js`, `not-found.js`. Shared code goes in `services/`.
+- Inside `api/` only three file names are allowed: `route.js`, `middleware.js`, `not-found.js`. Shared code goes in `services/`.
 - SQL values always go through `?` parameters. Never build SQL with string concatenation or template literals.
 - A service has no `ctx`. Pass what it needs as arguments from the route.
 - Errors are thrown, not returned: `throw ctx.error(404, 'Note not found')`.
@@ -17,14 +17,14 @@ This is an Adhar project. Adhar is a small backend framework for JSON APIs on No
 ## Project layout
 
 ```
-routes/
+api/
   middleware.js               runs for every request
-  route.js                    /
+  route.js                    /api
   not-found.js                optional custom 404 (only here, at the top)
-  notes/route.js              /notes
-  notes/[id]/route.js         /notes/:id        -> ctx.params.id
+  notes/route.js              /api/notes
+  notes/[id]/route.js         /api/notes/:id    -> ctx.params.id
   (admin)/middleware.js       runs only for routes inside (admin)/
-  (admin)/stats/route.js      /stats            (the group name is not in the URL)
+  (admin)/stats/route.js      /api/stats        (the group name is not in the URL)
 services/
   notes.js                    ctx.services.notes
   blog/posts.js               ctx.services.blog.posts
@@ -35,14 +35,15 @@ storage/app.db                the SQLite file, created automatically, not in git
 ```
 
 - Route folder names: lower-case letters, digits and `-`. `[name]` is a dynamic part and may appear at several levels (`users/[id]/posts/[postId]`). `(name)` is a group. There is no catch-all `[...path]`.
-- A fixed folder wins over a dynamic one: `/users/me` goes to `users/me/route.js` before `users/[id]/route.js`.
+- Every URL starts with `/api`, because the folder is called `api`. Anything else (`/`, `/notes`) is a `404`. Clients must call `/api/notes`, not `/notes`.
+- A fixed folder wins over a dynamic one: `/api/users/me` goes to `users/me/route.js` before `users/[id]/route.js`.
 - Service file and folder names must be JavaScript identifiers: `blogPosts.js`, not `blog-posts.js`.
 - Migration names: three digits, a dash, a lower-case name: `002-add-tags.sql`.
 
 ## A route file
 
 ```js
-// routes/notes/route.js
+// api/notes/route.js
 export const schema = {
     GET: { query: { page: 'integer?' } },
     POST: { body: { title: 'string', done: 'boolean?' } },
@@ -110,7 +111,7 @@ A `422` from a schema adds `"fields": { "title": "is required" }`.
 ## Middleware
 
 ```js
-// routes/(admin)/middleware.js
+// api/(admin)/middleware.js
 export default function (ctx, next) {
     if (ctx.headers.authorization !== `Bearer ${ctx.env.ADMIN_TOKEN}`) {
         throw ctx.error(401, 'Login required');
@@ -121,10 +122,10 @@ export default function (ctx, next) {
 ```
 
 - One `export default` function `(ctx, next)` per file, nothing else.
-- Order: `routes/middleware.js` first, then each folder down to the route, then the handler.
+- Order: `api/middleware.js` first, then each folder down to the route, then the handler.
 - `return next()` continues. Returning a value without calling `next()` answers the request and skips the handler.
 - `const result = await next();` lets you work after the handler; return `result` (or a changed value).
-- `404`, `405` and `OPTIONS` pass only through `routes/middleware.js`.
+- `404`, `405` and `OPTIONS` pass only through `api/middleware.js`.
 
 ## Services
 
@@ -165,12 +166,13 @@ node adhar dev [--port 8134]           dev server; restarts on change; runs pend
 node adhar start [--port 8134]         production server; refuses to start while migrations are pending
 node adhar migrate                     run pending migrations
 node adhar routes                      list every route
-node adhar new route "notes/[id]"      routes/notes/[id]/route.js
-node adhar new middleware "(admin)"    routes/(admin)/middleware.js
+node adhar new route "notes/[id]"      api/notes/[id]/route.js
+node adhar new middleware "(admin)"    api/(admin)/middleware.js
 node adhar new service blog/posts      services/blog/posts.js
 node adhar new migration add-tags      migrations/<next number>-add-tags.sql
 ```
 
+- Names for `new route` and `new middleware` are relative to `api/`: `notes`, not `api/notes`.
 - Quote names that contain `[ ]` or `( )`, because the shell gives those characters a meaning.
 - The dev server listens on http://localhost:8134 unless `PORT` in `.env` or `--port` says otherwise.
 - After you change files, run `node adhar routes`. It loads every route and middleware file and exits with code 1 on a mistake. Services and migrations are checked when the server starts.
@@ -187,7 +189,7 @@ import { createApp } from '@msilabs/adhar';
 
 test('creates a note', async () => {
     const app = await createApp(process.cwd(), { env: { DATABASE_PATH: ':memory:' } });
-    const res = await app.inject({ method: 'POST', path: '/notes', body: { title: 'Buy milk' } });
+    const res = await app.inject({ method: 'POST', path: '/api/notes', body: { title: 'Buy milk' } });
     assert.equal(res.status, 201);
     await app.close();
 });
@@ -205,8 +207,10 @@ test('creates a note', async () => {
 | `export function get(ctx)` | `export function GET(ctx)` |
 | `import { notes } from '../../services/notes.js'` | `ctx.services.notes` |
 | `` db.all(`SELECT * FROM notes WHERE id = ${id}`) `` | `db.all('SELECT * FROM notes WHERE id = ?', id)` |
-| `routes/notes/helpers.js` | `services/notes.js` |
-| `routes/notes/:id/route.js` | `routes/notes/[id]/route.js` |
+| `routes/notes/route.js` | `api/notes/route.js` |
+| `fetch('/notes')` | `fetch('/api/notes')` |
+| `api/notes/helpers.js` | `services/notes.js` |
+| `api/notes/:id/route.js` | `api/notes/[id]/route.js` |
 | `schema = { POST: { body: { title: { type: 'string', required: true } } } }` | `schema = { POST: { body: { title: 'string' } } }` |
 | `export const all = () => ...` in a service | `export default ({ db }) => ({ all() { ... } })` |
 | editing `migrations/001-...sql` after it ran | adding `migrations/002-...sql` |

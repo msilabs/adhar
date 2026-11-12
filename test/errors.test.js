@@ -25,7 +25,7 @@ test('suggest returns nothing for distant names', () => {
 
 test('AdharError keeps file, line and hint', () => {
     const err = new AdharError({
-        file: 'routes/users/route.js',
+        file: 'api/users/route.js',
         line: 4,
         message: 'Unknown export `get`.',
         hint: 'Did you mean `GET`?',
@@ -33,20 +33,20 @@ test('AdharError keeps file, line and hint', () => {
     assert.ok(err instanceof Error);
     assert.equal(err.name, 'AdharError');
     assert.equal(err.message, 'Unknown export `get`.');
-    assert.equal(err.file, 'routes/users/route.js');
+    assert.equal(err.file, 'api/users/route.js');
     assert.equal(err.line, 4);
     assert.equal(err.hint, 'Did you mean `GET`?');
 });
 
 test('formatDiagnostic puts the location first, then message and hint', () => {
     const lines = formatDiagnostic({
-        file: 'routes/users/route.js',
+        file: 'api/users/route.js',
         line: 4,
         message: 'Unknown export `get`.',
         hint: 'Did you mean `GET`?',
     });
     assert.deepEqual(lines, [
-        'routes/users/route.js:4',
+        'api/users/route.js:4',
         '  Unknown export `get`.',
         '',
         '  Hint: Did you mean `GET`?',
@@ -55,8 +55,8 @@ test('formatDiagnostic puts the location first, then message and hint', () => {
 
 test('formatDiagnostic works without a file, line or hint', () => {
     assert.deepEqual(formatDiagnostic({ message: 'Unknown command `x`.' }), ['', '  Unknown command `x`.']);
-    assert.deepEqual(formatDiagnostic({ file: 'routes/route.js', message: 'Broken.' }), [
-        'routes/route.js',
+    assert.deepEqual(formatDiagnostic({ file: 'api/route.js', message: 'Broken.' }), [
+        'api/route.js',
         '  Broken.',
     ]);
 });

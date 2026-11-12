@@ -33,7 +33,7 @@ const GITIGNORE = 'node_modules/\nstorage/\n.env\n';
 const ENV_EXAMPLE = `# Copy this file to .env and change the values.
 PORT=8134
 
-# The token for the routes inside routes/(admin)/.
+# The token for the routes inside api/(admin)/.
 ADMIN_TOKEN=change-me
 
 # Websites that may call this API from a browser, separated by commas.
@@ -135,7 +135,7 @@ function checkRouteFolders(segments) {
 
 function urlOf(segments) {
     const visible = segments.filter((segment) => !GROUP.test(segment));
-    return '/' + visible.map((segment) => segment.replace(PARAM, ':$1')).join('/');
+    return ['/api', ...visible.map((segment) => segment.replace(PARAM, ':$1'))].join('/');
 }
 
 function routeTemplate(segments) {
@@ -168,14 +168,25 @@ function nextMigrationNumber(root) {
     return String(next).padStart(3, '0');
 }
 
+// `adhar new route api/notes` would make api/api/notes/route.js, which is almost never what was meant.
+function checkNoFolderPrefix(kind, segments) {
+    if (segments.length < 2 || (segments[0] !== 'api' && segments[0] !== 'routes')) return;
+    const rest = segments.slice(1).join('/');
+    throw new AdharError({
+        message: 'Route names are relative to `api/`.',
+        hint: `Did you mean \`adhar new ${kind} ${/[[(]/.test(rest) ? JSON.stringify(rest) : rest}\`?`,
+    });
+}
+
 // Returns { file, contents, note } for one `adhar new` request.
 function plan(kind, name, root) {
     const segments = splitName(name);
 
     if (kind === 'route') {
         checkRouteFolders(segments);
+        checkNoFolderPrefix(kind, segments);
         return {
-            file: ['routes', ...segments, 'route.js'].join('/'),
+            file: ['api', ...segments, 'route.js'].join('/'),
             contents: routeTemplate(segments),
             note: `URL: ${urlOf(segments)}`,
         };
@@ -183,11 +194,11 @@ function plan(kind, name, root) {
 
     if (kind === 'middleware') {
         checkRouteFolders(segments);
-        const url = urlOf(segments);
+        checkNoFolderPrefix(kind, segments);
         return {
-            file: ['routes', ...segments, 'middleware.js'].join('/'),
+            file: ['api', ...segments, 'middleware.js'].join('/'),
             contents: MIDDLEWARE_TEMPLATE,
-            note: url === '/' && segments.length === 0 ? 'Runs for every request' : `Runs for every route in routes/${segments.join('/')}/`,
+            note: segments.length === 0 ? 'Runs for every request' : `Runs for every route in api/${segments.join('/')}/`,
         };
     }
 
@@ -237,7 +248,7 @@ function create(cwd, args) {
                 `You can create: ${KINDS.map((k) => `\`${k}\``).join(', ')}.`,
         });
     }
-    // `adhar new route .` and `adhar new middleware .` mean the top of routes/; the others need a real name.
+    // `adhar new route .` and `adhar new middleware .` mean the top of api/; the others need a real name.
     const atTop = kind === 'route' || kind === 'middleware';
     if (name === undefined || (!atTop && splitName(name).length === 0)) {
         throw new AdharError({ message: `\`adhar new ${kind}\` needs a name.`, hint: `For example: ${USAGE[kind]}` });

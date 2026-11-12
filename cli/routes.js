@@ -7,7 +7,7 @@ function listRoutes(root) {
     const { routes } = loadRoutes(root);
 
     if (routes.length === 0) {
-        log.info('No routes yet. Add one at routes/route.js.');
+        log.info('No routes yet. Add one at api/route.js.');
         return;
     }
 
