@@ -2,8 +2,10 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const net = require('node:net');
 const { fork } = require('node:child_process');
 const { assertProject } = require('../core/router.js');
+const { assertNoApiClash, hasWeb } = require('../core/web.js');
 const log = require('./log.js');
 
 const WORKER = path.join(__dirname, 'worker.js');
@@ -45,10 +47,53 @@ function watchProject(root, onChange) {
     return { refresh, stop };
 }
 
+// Asks the OS for a free port on localhost, for Alo's dev server.
+function freePort() {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer();
+        server.once('error', reject);
+        server.listen(0, 'localhost', () => {
+            const { port } = server.address();
+            server.close(() => resolve(port));
+        });
+    });
+}
+
 // The dev server is two processes: this one watches files, and a worker serves the project.
 // ES modules cannot be unloaded, so a change means a fresh worker.
-function runDev({ root, port }) {
+// A full stack project adds a third: Alo's dev server, started once; the worker passes the site's requests to it.
+async function runDev({ root, port }) {
     assertProject(root);
+
+    let alo = null;
+    let webPort;
+    if (hasWeb(root)) {
+        assertNoApiClash(root);
+        const { startAloDev } = require('./web.js');
+        webPort = await freePort();
+        alo = startAloDev(root, webPort);
+        alo.once('exit', () => {
+            alo = null;
+            if (stopping) return;
+            log.warn({
+                message: 'The Alo dev server stopped, so the site is down. The API keeps running.',
+                hint: 'Fix what Alo reported above, then restart `adhar dev`.',
+            });
+        });
+    }
+
+    function stopAlo() {
+        return new Promise((resolve) => {
+            if (!alo) return resolve();
+            const running = alo;
+            const force = setTimeout(() => running.kill('SIGKILL'), KILL_AFTER);
+            running.once('exit', () => {
+                clearTimeout(force);
+                resolve();
+            });
+            running.kill('SIGTERM');
+        });
+    }
 
     let child = null;
     let timer = null;
@@ -57,7 +102,11 @@ function runDev({ root, port }) {
     let stopping = false;
 
     function startWorker() {
-        const worker = fork(WORKER, port === undefined ? [] : [String(port)], { cwd: root, stdio: 'inherit' });
+        const worker = fork(WORKER, port === undefined ? [] : [String(port)], {
+            cwd: root,
+            stdio: 'inherit',
+            env: webPort === undefined ? process.env : { ...process.env, ADHAR_WEB_PORT: String(webPort) },
+        });
         child = worker;
         worker.once('exit', (code) => {
             if (child === worker) child = null;
@@ -107,7 +156,7 @@ function runDev({ root, port }) {
         stopping = true;
         clearTimeout(timer);
         watcher.stop();
-        stopWorker().then(() => process.exit(0));
+        Promise.all([stopWorker(), stopAlo()]).then(() => process.exit(0));
     };
     process.once('SIGINT', stop);
     process.once('SIGTERM', stop);

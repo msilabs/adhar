@@ -9,6 +9,10 @@ const log = require('./log.js');
 const { version } = require('../package.json');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'templates', 'init');
+// What `init --web` adds: the Alo site that goes into web/, and a section for AGENTS.md.
+const WEB_TEMPLATE_DIR = path.join(__dirname, '..', 'templates', 'web');
+const WEB_AGENTS = path.join(__dirname, '..', 'templates', 'web-agents.md');
+const ALO_RANGE = '^1.1.0';
 // A folder holding only these still counts as empty, so `git init` before `adhar init` is fine.
 const IGNORABLE = new Set(['.git', '.DS_Store', 'Thumbs.db']);
 
@@ -30,14 +34,31 @@ try {
 
 // These are written from here because npm leaves dot-files like .gitignore out of a published package.
 const GITIGNORE = 'node_modules/\nstorage/\n.env\n';
+const WEB_GITIGNORE = 'web/dist/\nweb/.alo/\n';
 const ENV_EXAMPLE = `# Copy this file to .env and change the values.
 PORT=8134
 
 # The token for the routes inside api/(admin)/.
 ADMIN_TOKEN=change-me
-
+`;
+// A full stack project serves the site and the API from one origin, so it needs no CORS.
+const ENV_CORS = `
 # Websites that may call this API from a browser, separated by commas.
 # CORS_ORIGIN=http://localhost:3000
+`;
+
+const GITATTRIBUTES = '*.alo linguist-language=HTML\n';
+// VS Code suggests installing the Alo extension when the project is opened.
+const VSCODE_EXTENSIONS = `{
+    "recommendations": ["msilabs.alo-vscode"]
+}
+`;
+const VSCODE_SETTINGS = `{
+    "workbench.editor.customLabels.patterns": {
+        "**/pages/**/page.alo": "\${dirname} (page)",
+        "**/pages/**/layout.alo": "\${dirname} (layout)"
+    }
+}
 `;
 
 function packageName(folder) {
@@ -49,15 +70,19 @@ function packageName(folder) {
     return name || 'my-api';
 }
 
-function packageJson(name) {
+function packageJson(name, web) {
     const data = {
         name,
         private: true,
         type: 'module',
         engines: { node: '>=22.13' },
-        scripts: { dev: 'adhar dev', start: 'adhar start', migrate: 'adhar migrate' },
+        scripts: web
+            ? { dev: 'adhar dev', build: 'adhar build', start: 'adhar start', migrate: 'adhar migrate' }
+            : { dev: 'adhar dev', start: 'adhar start', migrate: 'adhar migrate' },
         dependencies: { '@msilabs/adhar': `^${version}` },
     };
+    // Alo is only needed by `dev` and `build`; `start` serves the files that were built.
+    if (web) data.devDependencies = { '@msilabs/alo': ALO_RANGE };
     return JSON.stringify(data, null, 4) + '\n';
 }
 
@@ -66,7 +91,7 @@ function writeNew(file, contents) {
     fs.writeFileSync(file, contents);
 }
 
-function init(cwd, folder = '.') {
+function init(cwd, folder = '.', { web = false } = {}) {
     const target = path.resolve(cwd, folder);
     if (fs.existsSync(target)) {
         if (!fs.statSync(target).isDirectory()) {
@@ -88,16 +113,25 @@ function init(cwd, folder = '.') {
     fs.cpSync(TEMPLATE_DIR, target, { recursive: true });
     writeNew(path.join(target, 'adhar'), ROOT_SCRIPT);
     fs.chmodSync(path.join(target, 'adhar'), 0o755);
-    writeNew(path.join(target, 'package.json'), packageJson(packageName(target)));
-    writeNew(path.join(target, '.gitignore'), GITIGNORE);
-    writeNew(path.join(target, '.env.example'), ENV_EXAMPLE);
-    writeNew(path.join(target, '.env'), ENV_EXAMPLE.split('\n').slice(1).join('\n'));
+    writeNew(path.join(target, 'package.json'), packageJson(packageName(target), web));
+    writeNew(path.join(target, '.gitignore'), GITIGNORE + (web ? WEB_GITIGNORE : ''));
+    const envExample = ENV_EXAMPLE + (web ? '' : ENV_CORS);
+    writeNew(path.join(target, '.env.example'), envExample);
+    writeNew(path.join(target, '.env'), envExample.split('\n').slice(1).join('\n'));
+
+    if (web) {
+        fs.cpSync(WEB_TEMPLATE_DIR, path.join(target, 'web'), { recursive: true });
+        fs.appendFileSync(path.join(target, 'AGENTS.md'), '\n' + fs.readFileSync(WEB_AGENTS, 'utf8'));
+        writeNew(path.join(target, '.gitattributes'), GITATTRIBUTES);
+        writeNew(path.join(target, '.vscode', 'settings.json'), VSCODE_SETTINGS);
+        writeNew(path.join(target, '.vscode', 'extensions.json'), VSCODE_EXTENSIONS);
+    }
 
     const relative = path.relative(cwd, target);
     const steps = [];
     if (relative) steps.push(`cd ${relative.includes(' ') ? JSON.stringify(relative) : relative}`);
     steps.push('npm install', 'node adhar dev');
-    log.success(`Created a new Adhar project: ${relative || '.'}`);
+    log.success(`Created a new ${web ? 'full stack ' : ''}Adhar project: ${relative || '.'}`);
     log.info(`\nNext steps:\n${steps.map((step) => '  ' + step).join('\n')}\n`);
 }
 

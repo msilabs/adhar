@@ -1,0 +1,104 @@
+<template>
+    <section class="notes">
+        <form>
+            <input name="title" placeholder="নতুন নোট" aria-label="নতুন নোট" required />
+            <button>যোগ করুন</button>
+        </form>
+        <p class="status" role="status"></p>
+        <ul></ul>
+    </section>
+</template>
+
+<style>
+    .notes {
+        max-width: 32rem;
+    }
+
+    form {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    input {
+        flex: 1;
+        min-width: 0;
+        padding: 0.55rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+    }
+
+    button {
+        padding: 0.55rem 1rem;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #1f1a14;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .status {
+        min-height: 1.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+    }
+
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+</style>
+
+<style global>
+    /* <li> গুলো JS দিয়ে তৈরি হয়, তাই স্কোপড স্টাইল এদের গায়ে লাগে না */
+    .notes li {
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+</style>
+
+<script>
+    const form = $el.querySelector('form');
+    const list = $el.querySelector('ul');
+    const status = $el.querySelector('.status');
+
+    // সাইট আর API একই ঠিকানায় চলে, তাই শুধু /api/... লিখলেই হয়।
+    async function load() {
+        const res = await fetch('/api/notes');
+        if (!res.ok) {
+            status.textContent = 'নোট আনা যায়নি।';
+            return;
+        }
+        const notes = await res.json();
+        status.textContent = notes.length === 0 ? 'এখনো কোনো নোট নেই।' : '';
+        const items = notes.map((note) => {
+            const li = document.createElement('li');
+            li.textContent = note.title;
+            return li;
+        });
+        list.replaceChildren(...items);
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const title = new FormData(form).get('title');
+        const res = await fetch('/api/notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title }),
+        });
+        if (res.ok) {
+            form.reset();
+            load();
+        } else {
+            status.textContent = 'নোটটি যোগ করা যায়নি।';
+        }
+    });
+
+    load();
+</script>

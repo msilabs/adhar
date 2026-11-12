@@ -16,14 +16,15 @@ const { AdharError, suggest } = require('../core/errors.js');
 const log = require('./log.js');
 const { version } = require('../package.json');
 
-const COMMANDS = ['init', 'dev', 'start', 'routes', 'migrate', 'new'];
+const COMMANDS = ['init', 'dev', 'build', 'start', 'routes', 'migrate', 'new', 'web'];
 const PORT_COMMANDS = ['dev', 'start'];
 
 const HELP = `Adhar — a lightweight backend API framework (v${version})
 
 Usage:
-  adhar init [folder]                create a new project
+  adhar init [folder] [--web]        create a new project (--web adds an Alo site in web/)
   adhar dev [--port 8134]            dev server, restarts on change
+  adhar build                        build the site in web/ into web/dist/
   adhar start [--port 8134]          production server
   adhar routes                       list all routes
   adhar migrate                      run pending migrations
@@ -31,6 +32,7 @@ Usage:
   adhar new middleware "(admin)"     api/(admin)/middleware.js
   adhar new service blog/posts       services/blog/posts.js
   adhar new migration create-posts   migrations/<next number>-create-posts.sql
+  adhar web new component Card       web/components/Card.alo (Alo's \`new\`, inside web/)
   adhar --help                       show this help
   adhar --version                    show the version
 
@@ -51,6 +53,10 @@ function parseArgs(argv) {
             flags.version = true;
             continue;
         }
+        if (arg === '--web') {
+            flags.web = true;
+            continue;
+        }
         if (!arg.startsWith('-')) {
             positionals.push(arg);
             continue;
@@ -65,12 +71,12 @@ function parseArgs(argv) {
         }
 
         if (name !== 'port') {
-            const close = suggest(name, ['port', 'help', 'version']);
+            const close = suggest(name, ['port', 'web', 'help', 'version']);
             throw new AdharError({
                 message: `Unknown flag \`${arg}\`.`,
                 hint: close
                     ? `Did you mean \`--${close}\`?`
-                    : 'Adhar only has `--port`. Run `adhar --help` for everything.',
+                    : 'Adhar only has `--port` and `--web`. Run `adhar --help` for everything.',
             });
         }
 
@@ -91,6 +97,12 @@ function parseArgs(argv) {
 }
 
 function validateFlags(command, flags) {
+    if (flags.web && command !== 'init') {
+        throw new AdharError({
+            message: `\`--web\` does not work with \`adhar ${command}\`.`,
+            hint: '`--web` only works with `adhar init`, e.g. `adhar init my-app --web`.',
+        });
+    }
     if (flags.port === undefined) return;
 
     if (!PORT_COMMANDS.includes(command)) {
@@ -114,16 +126,20 @@ async function runCommand(command, args, flags) {
     const root = process.cwd();
 
     if (command === 'init') {
-        require('./scaffold.js').init(root, args[0]);
+        require('./scaffold.js').init(root, args[0], { web: Boolean(flags.web) });
     } else if (command === 'new') {
         require('./scaffold.js').create(root, args);
+    } else if (command === 'build') {
+        process.exitCode = require('./web.js').build(root);
+    } else if (command === 'web') {
+        process.exitCode = require('./web.js').web(root, args);
     } else if (command === 'routes') {
         require('./routes.js').listRoutes(root);
     } else if (command === 'migrate') {
         const { loadEnv } = require('../core/env.js');
         require('./migrate.js').migrate(root, loadEnv(root, process.env));
     } else if (command === 'dev') {
-        require('./dev.js').runDev({ root, port: flags.port });
+        await require('./dev.js').runDev({ root, port: flags.port });
     } else {
         await require('./serve.js').run({ root, port: flags.port, dev: false });
     }

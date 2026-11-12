@@ -1,0 +1,18 @@
+<head>
+    <title>পেইজটি পাওয়া যায়নি | {{ data.site.name }}</title>
+</head>
+
+<template>
+    <p class="code">৪০৪</p>
+    <h1>এই পেইজটি পাওয়া যায়নি</h1>
+    <a href="/">হোমে ফিরে যান</a>
+</template>
+
+<style>
+    .code {
+        color: var(--accent-strong);
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+</style>

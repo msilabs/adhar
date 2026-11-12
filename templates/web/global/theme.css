@@ -1,0 +1,73 @@
+/* রঙ, ফন্ট আর মাপ: সাইটের সব জায়গায় এই ভেরিয়েবলগুলো ব্যবহার হয় */
+:root {
+    --bg: #fffcf6;
+    --surface: #ffffff;
+    --text: #1f1a14;
+    --muted: #6b6258;
+    --border: #eee6da;
+    --accent: #f5a524;
+    --accent-strong: #b45f06;
+
+    --font-sans: system-ui, -apple-system, 'Segoe UI', 'Noto Sans Bengali', sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    --page: 48rem;
+
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #12100d;
+        --surface: #1b1814;
+        --text: #f5efe6;
+        --muted: #aea395;
+        --border: #2f2922;
+        --accent: #fbbf3c;
+        --accent-strong: #fcd27a;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+}
+
+h1,
+h2 {
+    line-height: 1.3;
+}
+
+p {
+    margin: 0;
+}
+
+a {
+    color: var(--accent-strong);
+    text-underline-offset: 3px;
+}
+
+:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+
+code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+}
+
+.container {
+    width: min(100% - 2.5rem, var(--page));
+    margin-inline: auto;
+}
