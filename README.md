@@ -4,9 +4,9 @@
 [![CI](https://github.com/msilabs/adhar/actions/workflows/ci.yml/badge.svg)](https://github.com/msilabs/adhar/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/npm/l/@msilabs/adhar)](LICENSE)
 
-**হালকা backend API ফ্রেমওয়ার্ক।** ফোল্ডারে সাধারণ JS ফাংশন লিখুন, পান JSON API: রাউটিং, middleware, ভ্যালিডেশন, service আর SQLite ডেটাবেস। Node.js ছাড়া আর কিছু লাগে না।
+**হালকা backend API ফ্রেমওয়ার্ক; Alo-র সাথে full stack।** ফোল্ডারে সাধারণ JS ফাংশন লিখুন, পান JSON API: রাউটিং, middleware, ভ্যালিডেশন, service আর SQLite ডেটাবেস। Node.js ছাড়া আর কিছু লাগে না।
 
-Adhar হলো [Alo](https://github.com/msilabs/alo)-র জোড়া। Alo বানায় স্ট্যাটিক ফ্রন্টএন্ড, Adhar বানায় তার পেছনের API। দুটোর নিয়ম একই ধাঁচের, তাই একটি জানলে অন্যটি শিখতে সময় লাগে না।
+Adhar হলো [Alo](https://github.com/msilabs/alo)-র জোড়া। Alo বানায় স্ট্যাটিক ফ্রন্টএন্ড, Adhar বানায় তার পেছনের API। দুটোর নিয়ম একই ধাঁচের, তাই একটি জানলে অন্যটি শিখতে সময় লাগে না। চাইলে দুটো এক প্রজেক্টে, এক পোর্টে চলে: দেখুন [Full stack](#full-stack)।
 
 ## Adhar কী
 
@@ -324,6 +324,7 @@ CORS_ORIGIN=https://example.com, http://localhost:3000
 ```bash
 node adhar init [folder]               # উদাহরণসহ নতুন প্রজেক্ট (npx @msilabs/adhar init)
 node adhar dev [--port 8134]           # dev সার্ভার; ফাইল বদলালে নতুন করে চালু হয়
+node adhar build                       # full stack: web/-এর সাইট বানায় web/dist/-এ
 node adhar start [--port 8134]         # production সার্ভার
 node adhar routes                      # সব route-এর তালিকা
 node adhar migrate                     # বাকি migration চালানো
@@ -331,6 +332,7 @@ node adhar new route "users/[id]"      # api/users/[id]/route.js
 node adhar new middleware "(admin)"    # api/(admin)/middleware.js
 node adhar new service blog/posts      # services/blog/posts.js
 node adhar new migration create-posts  # migrations/<পরের নম্বর>-create-posts.sql
+node adhar web new component Card      # full stack: web/components/Card.alo
 node adhar --help
 node adhar --version
 ```
@@ -381,6 +383,17 @@ node adhar migrate
 node adhar start
 ```
 
+full stack প্রজেক্টে আগে সাইট build করুন:
+
+```bash
+npm install
+node adhar build
+node adhar migrate
+node adhar start
+```
+
+`build` ধাপে Alo লাগে, আর Alo আছে `devDependencies`-এ। তাই ওই ধাপের আগে `npm install` চালান `--omit=dev` ছাড়া।
+
 মনে রাখুন:
 
 - **`storage/` ফোল্ডার স্থায়ী ডিস্কে থাকতে হবে।** ডেটাবেস ওই ফোল্ডারের একটি ফাইল। যে হোস্টিং প্রতি ডিপ্লয়ে ডিস্ক মুছে ফেলে, সেখানে একটি volume যুক্ত করুন আর `DATABASE_PATH` দিয়ে সেদিকে দেখান।
@@ -389,7 +402,59 @@ node adhar start
 - serverless প্ল্যাটফর্মে (Vercel, Netlify Functions, Cloudflare Workers) চলে না; সেখানে স্থায়ী প্রসেস আর ডিস্ক নেই।
 - ব্যাকআপ: `storage/app.db` ফাইলটি কপি করাই ব্যাকআপ। সার্ভার চালু থাকলে সাথে `app.db-wal` ফাইলও নিন, অথবা SQLite-এর `.backup` কমান্ড ব্যবহার করুন।
 
-## Alo-র সাথে ব্যবহার
+## Full stack
+
+একই প্রজেক্টে Adhar-এর API আর Alo-র সাইট, এক পোর্টে, এক ডিপ্লয়ে:
+
+```bash
+npx @msilabs/adhar init my-app --web
+cd my-app
+npm install
+node adhar dev
+```
+
+`http://localhost:8134` খুললে সাইট আসে, আর `http://localhost:8134/api/notes`-এ API। `.alo` ফাইল বদলালে পেইজ নিজে রিলোড হয়; `api/`-এর ফাইল বদলালে API নতুন করে চালু হয়।
+
+```
+my-app/
+├── api/              ← API, আগের মতোই → /api/…
+├── services/
+├── migrations/
+├── web/              ← Alo-র সাইট → বাকি সব ঠিকানা
+│   ├── pages/
+│   ├── components/
+│   ├── data/
+│   ├── global/
+│   └── public/
+├── package.json      ← একটাই; Alo থাকে devDependencies-এ
+└── adhar             ← একটাই কমান্ড
+```
+
+নিয়ম:
+
+- **`web/pages/` ফোল্ডার থাকলেই প্রজেক্ট full stack।** কোনো কনফিগ নেই। ফোল্ডারটি না থাকলে Adhar আগের মতোই শুধু API।
+- `/api` আর তার নিচের সব ঠিকানা API-র; বাকি সব সাইটের। তাই `web/pages/api/` রাখা যায় না।
+- সাইট থেকে API ডাকুন শুধু পথ দিয়ে: `fetch('/api/notes')`। একই ঠিকানা, তাই CORS লাগে না।
+- `web/`-এর ভেতরে `package.json` বা `alo` লঞ্চার নেই। সব কাজ `node adhar …` দিয়ে; নতুন পেইজ বা কম্পোনেন্ট: `node adhar web new page about`।
+- সাইটের অংশে `api/middleware.js` চলে না।
+
+তিনটি কমান্ড:
+
+| কমান্ড | যা করে |
+| --- | --- |
+| `node adhar dev` | API আর Alo-র dev সার্ভার দুটোই চালায়, এক ঠিকানায়, লাইভ রিলোডসহ |
+| `node adhar build` | সাইটকে সাধারণ HTML, CSS, JS ফাইল বানিয়ে `web/dist/`-এ রাখে |
+| `node adhar start` | production: API আর `web/dist/`-এর ফাইল সার্ভ করে। Alo তখন চলে না |
+
+`start` নিজে build করে না; `web/dist/` না থাকলে চালু হয় না আর বলে দেয় `node adhar build` চালাতে।
+
+চলমান শুধু-API প্রজেক্টে সাইট যোগ করতে: `npm i -D @msilabs/alo`, তারপর `web/pages/page.alo` বানান। API-র কোনো ঠিকানা বদলায় না।
+
+`.alo` ফাইল লেখার নিয়ম [Alo-র README](https://github.com/msilabs/alo#readme)-তে।
+
+## Alo-র সাথে ব্যবহার (আলাদা প্রজেক্ট)
+
+কখন কোনটি: সাইট আর API একসাথে ডিপ্লয় হলে [Full stack](#full-stack) সহজ। সাইট স্ট্যাটিক হোস্টে (GitHub Pages, Netlify) আর API আলাদা সার্ভারে থাকলে, বা একই API মোবাইল অ্যাপও ডাকলে, দুটি আলাদা প্রজেক্ট রাখুন; তখন নিচের নিয়ম।
 
 Alo সাইট স্ট্যাটিক, তাই ফর্ম জমা বা লাইভ ডেটার জন্য সে ব্রাউজার থেকে Adhar API ডাকে।
 
@@ -528,7 +593,7 @@ Adhar সাধারণ JS ফাইল লোড করে; কোনো ব�
 ## যা Adhar ইচ্ছাকৃতভাবে করে না, আর কেন
 
 - **ORM বা query builder:** SQL নিজেই যথেষ্ট পরিষ্কার, আর শিখলে সব জায়গায় কাজে লাগে।
-- **HTML রেন্ডার আর স্ট্যাটিক ফাইল সার্ভ:** সে কাজ Alo-র।
+- **HTML রেন্ডার:** সে কাজ Alo-র। Adhar শুধু Alo-র তৈরি ফাইল সার্ভ করে, তাও কেবল full stack প্রজেক্টে।
 - **`import`, কনফিগারেশন ফাইল, প্লাগইন, ডেকোরেটর, controller ক্লাস:** সবকিছু আসে ফোল্ডার আর ফাইলের নাম থেকে।
 - **TypeScript বিল্ড, WebSocket, GraphQL:** ছোট API-তে লাগে না।
 - **তৈরি auth, ফাইল আপলোড, rate limit, OpenAPI, catch-all route (`[...path]`):** আসল ব্যবহারকারীরা চাইলে পরে ভাবা হবে।
@@ -541,6 +606,7 @@ Adhar সাধারণ JS ফাইল লোড করে; কোনো ব�
 ```bash
 git clone https://github.com/msilabs/adhar.git
 cd adhar
+npm install
 npm test
 ```
 

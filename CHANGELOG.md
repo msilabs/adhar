@@ -1,5 +1,25 @@
 # পরিবর্তনের তালিকা
 
+## 1.2.0 (২০২৬-১১-১২)
+
+কোনো ভাঙা পরিবর্তন নেই। প্রজেক্টে `web/pages/` ফোল্ডার না থাকলে কিছুই বদলায় না।
+
+### নতুন
+
+- **Full stack:** প্রজেক্টে `web/` ফোল্ডার থাকলে তার ভেতরের [Alo](https://github.com/msilabs/alo) সাইট আর API এক পোর্টে চলে। `/api`-র নিচের ঠিকানা API-র, বাকি সব সাইটের; সাইট থেকে `fetch('/api/notes')` লিখলেই হয়, CORS লাগে না।
+- **`adhar init my-app --web`:** full stack টেমপ্লেট, একটি নোটের পেইজসহ যা API ডাকে।
+- **`adhar dev`:** full stack প্রজেক্টে Alo-র dev সার্ভারও চালায়, একই ঠিকানায়, লাইভ রিলোডসহ।
+- **`adhar build`:** সাইট বানায় `web/dist/`-এ।
+- **`adhar start`:** `web/dist/`-এর ফাইল সার্ভ করে (`ETag`, `assets/`-এ দীর্ঘ cache)। Alo তখন চলে না।
+- **`adhar web new …`:** `web/`-এর ভেতরে নতুন পেইজ, লেআউট বা কম্পোনেন্ট।
+- `app.inject()` সাইটের ফাইলের response-ও ফেরত দেয়।
+
+### জানা দরকার
+
+- Alo থাকে প্রজেক্টের `devDependencies`-এ (`npm i -D @msilabs/alo`, 1.1.0 বা নতুন)। production-এ `node adhar build` চালাতে হলে `npm install` করুন `--omit=dev` ছাড়া।
+- `start` নিজে build করে না: ক্রম হলো `node adhar build` → `node adhar migrate` → `node adhar start`।
+- `web/pages/api/` বা `web/public/api/` রাখা যায় না; `/api` API-র।
+
 ## 1.1.0 (২০২৬-১১-১২)
 
 ### ভাঙা পরিবর্তন

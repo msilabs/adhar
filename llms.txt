@@ -1,6 +1,6 @@
 # Adhar
 
-> Adhar is a lightweight backend framework for JSON APIs on Node.js: folder-based routes, plain handler functions that return the response, folder middleware, a small schema validator, auto-injected services and the built-in SQLite database. Zero dependencies. Requires Node.js 22.13+. It is the backend sibling of the Alo static site framework.
+> Adhar is a lightweight backend framework for JSON APIs on Node.js: folder-based routes under `/api`, plain handler functions that return the response, folder middleware, a small schema validator, auto-injected services and the built-in SQLite database. A project with a `web/` folder is full stack: an Alo site served on the same port as the API. Zero dependencies. Requires Node.js 22.13+. It is the backend sibling of the Alo static site framework.
 
 If you write code for an Adhar project, read the AI guide first. It lists the rules and the mistakes AI assistants make most often (Adhar is not Express, Koa, Hono or Next.js).
 
