@@ -2,13 +2,14 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawn, spawnSync } = require('node:child_process');
+const { fork, spawnSync } = require('node:child_process');
 const { AdharError } = require('../core/errors.js');
 const { assertProject } = require('../core/router.js');
 const { assertNoApiClash, hasWeb } = require('../core/web.js');
 const log = require('./log.js');
 
 const MIN_ALO = [1, 1, 0];
+const ALO_RUNNER = path.join(__dirname, 'alo-runner.js');
 
 function isOlder(version, minimum) {
     const parts = version.split('-')[0].split('.').map(Number);
@@ -133,9 +134,9 @@ function createLineFilter(write) {
 // Starts Alo's dev server inside web/ for `adhar dev`. Returns the child process.
 function startAloDev(root, port) {
     const alo = requireAlo(root);
-    const child = spawn(process.execPath, [alo.bin, 'dev', '--port', String(port)], {
+    const child = fork(ALO_RUNNER, [alo.bin, 'dev', '--port', String(port)], {
         cwd: path.join(root, 'web'),
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     });
     child.stdout.setEncoding('utf8').on('data', createLineFilter((text) => process.stdout.write(text)));
     child.stderr.setEncoding('utf8').on('data', (text) => process.stderr.write(text));

@@ -289,18 +289,29 @@ test('when Alo dies the API keeps running and the site answers 502', async (t) =
     await dev.waitFor(/GET \/ 502 \d+ms/);
 });
 
-// Windows has no signals: the process there is ended at once, so there is nothing to observe.
-test('stopping adhar dev also stops Alo', { skip: process.platform === 'win32' }, async (t) => {
+async function startFakeDev(t) {
     const root = makeProject(t, { ...PROJECT, ...fakeAlo('1.1.0', FAKE_DEV) });
     const { dev, get } = await startDev(t, root);
     await dev.waitFor(/Adhar is running/);
     assert.equal(await (await get('/about/')).text(), 'fake site');
     const aloPid = Number(fs.readFileSync(path.join(root, 'web', 'alo.pid'), 'utf8'));
+    return { dev, aloPid };
+}
 
+// Windows has no signals: the process there is ended at once, so there is nothing to observe.
+test('stopping adhar dev also stops Alo', { skip: process.platform === 'win32' }, async (t) => {
+    const { dev, aloPid } = await startFakeDev(t);
     dev.child.kill('SIGTERM');
     const { code } = await dev.exited;
     assert.equal(code, 0);
     await eventually(() => assert.throws(() => process.kill(aloPid, 0)), 5000);
+});
+
+test('Alo does not outlive a killed adhar dev', async (t) => {
+    const { dev, aloPid } = await startFakeDev(t);
+    dev.child.kill('SIGKILL');
+    await dev.exited;
+    await eventually(() => assert.throws(() => process.kill(aloPid, 0)), 10_000);
 });
 
 test('in dev an open connection does not hold up the shutdown', async (t) => {
@@ -391,7 +402,7 @@ test('adhar init --web creates a full stack project', (t) => {
     assert.doesNotMatch(read('.env'), /CORS/);
     assert.match(read('.env'), /^PORT=8134\n/);
     assert.match(read('AGENTS.md'), /^# Adhar project: instructions for AI assistants/);
-    assert.match(read('AGENTS.md'), /\n## The site in `web\/` \(Alo\)\n/);
+    assert.match(read('AGENTS.md'), /\n## The site in `web\/` \(Alo\)\r?\n/);
     assert.match(read('web/components/Notes.alo'), /fetch\('\/api\/notes'\)/);
     assert.deepEqual(JSON.parse(read('.vscode/extensions.json')), { recommendations: ['msilabs.alo-vscode'] });
 });
