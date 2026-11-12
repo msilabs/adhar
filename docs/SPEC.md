@@ -13,9 +13,9 @@
 
 এই অংশই ফ্রেমওয়ার্কের পরিচয়। এখানে যা নেই, ব্যবহারকারীকে তা শিখতে হবে না।
 
-1. **Route:** `routes/users/route.js` মানে `/users`। ফাইলে `GET`, `POST`, `PUT`, `PATCH`, `DELETE` নামে ফাংশন export করুন।
+1. **Route:** `api/users/route.js` মানে `/api/users`। ফাইলে `GET`, `POST`, `PUT`, `PATCH`, `DELETE` নামে ফাংশন export করুন।
 2. **উত্তর:** ফাংশন যা return করে, তা-ই JSON হয়ে যায়।
-3. **ডায়নামিক route:** `routes/users/[id]/route.js` মানে `/users/:id`; মান থাকে `ctx.params.id`-তে।
+3. **ডায়নামিক route:** `api/users/[id]/route.js` মানে `/api/users/:id`; মান থাকে `ctx.params.id`-তে।
 4. **Middleware:** `middleware.js` তার ফোল্ডারের সব route-এর আগে চলে। পরের ধাপে যেতে `next()`।
 5. **Service:** `services/users.js` হয় `ctx.services.users`। ফোল্ডারে থাকলে `services/blog/posts.js` হয় `ctx.services.blog.posts`।
 6. **Database:** `ctx.db` দিয়ে SQL চালানো। টেবিল বানানো হয় `migrations/001-নাম.sql` ফাইলে।
@@ -83,6 +83,7 @@ Route, ডায়নামিক অংশ, route গ্রুপ, middleware,
 - `schema` থেকে OpenAPI (`adhar docs`)
 - File upload (multipart), catch-all route `[...path]`, rate limit, cookie helper
 - Alo + Adhar একসাথে চালানোর নির্দেশিকা
+- `/api`-র বাইরের route
 
 ### কখনো না
 
@@ -164,18 +165,18 @@ Alo-তে প্যাকেজটি `devDependencies`-এ, কারণ ব�
 ```
 my-api/
 ├── adhar
-├── routes/
+├── api/
 │   ├── middleware.js         ← সব route-এ
-│   ├── route.js              → /
+│   ├── route.js              → /api
 │   ├── not-found.js          ← ঐচ্ছিক: নিজের 404
 │   ├── users/
-│   │   ├── route.js          → /users
+│   │   ├── route.js          → /api/users
 │   │   └── [id]/
-│   │       └── route.js      → /users/:id
+│   │       └── route.js      → /api/users/:id
 │   └── (admin)/
 │       ├── middleware.js     ← শুধু এই গ্রুপে
 │       └── stats/
-│           └── route.js      → /stats
+│           └── route.js      → /api/stats
 ├── services/
 │   ├── users.js              → ctx.services.users
 │   └── blog/
@@ -189,7 +190,7 @@ my-api/
 └── package.json
 ```
 
-`routes/` বাধ্যতামূলক। `services/`, `migrations/`, `.env` ঐচ্ছিক। এর বাইরের ফোল্ডার (যেমন `lib/`) Adhar ছোঁয় না।
+`api/` বাধ্যতামূলক (1.1.0-র আগে নাম ছিল `routes/`; সেটি পেলে চালুর সময় ভুল, নতুন নাম আর `/api` ঠিকানার কথাসহ; দুটোই থাকলেও ভুল)। `services/`, `migrations/`, `.env` ঐচ্ছিক। এর বাইরের ফোল্ডার (যেমন `lib/`) Adhar ছোঁয় না।
 
 ---
 
@@ -197,11 +198,12 @@ my-api/
 
 ### ফাইল থেকে URL
 
-- `routes/<ফোল্ডার>/route.js` → `/<ফোল্ডার>`। `routes/route.js` → `/`।
-- `[নাম]` ফোল্ডার একটি path অংশের সাথে মেলে; মান `ctx.params.নাম`-এ, URL-decode করা string। একাধিক লেভেলে থাকতে পারে: `routes/users/[id]/posts/[postId]/route.js`।
+- ফোল্ডারই URL: ফোল্ডারের নাম `api`, তাই সব ঠিকানা `/api` দিয়ে শুরু। `api/<ফোল্ডার>/route.js` → `/api/<ফোল্ডার>`। `api/route.js` → `/api`।
+- `/api`-র বাইরের ঠিকানা (`/`, `/users`, `/apix`) কোনো route-এর সাথে মেলে না → `404`।
+- `[নাম]` ফোল্ডার একটি path অংশের সাথে মেলে; মান `ctx.params.নাম`-এ, URL-decode করা string। একাধিক লেভেলে থাকতে পারে: `api/users/[id]/posts/[postId]/route.js`।
 - `(নাম)` ফোল্ডার URL-এ আসে না; শুধু সাজানো আর middleware ভাগ করার জন্য।
-- শেষের `/` উপেক্ষিত: `/users/` আর `/users` একই।
-- স্থির অংশ ডায়নামিকের আগে মেলে: `/users/me` যায় `users/me/route.js`-এ, `users/[id]/route.js`-এ নয়।
+- শেষের `/` উপেক্ষিত: `/api/users/` আর `/api/users` একই।
+- স্থির অংশ ডায়নামিকের আগে মেলে: `/api/users/me` যায় `users/me/route.js`-এ, `users/[id]/route.js`-এ নয়।
 - ফোল্ডারের নাম: ছোট হাতের অক্ষর, সংখ্যা, `-`। `[নাম]`-এর ভেতরে JS identifier।
 
 চালুর সময়ের ভুল (ফাইলের পাথ + ইঙ্গিতসহ):
@@ -209,12 +211,12 @@ my-api/
 - দুই ফাইল একই URL দেয় (যেমন `(a)/users/route.js` আর `(b)/users/route.js`)
 - একই জায়গায় দুই ভিন্ন নামের ডায়নামিক ফোল্ডার (`[id]` আর `[slug]`)
 - একই path-এ এক প্যারামিটারের নাম দুবার
-- `routes/`-এর ভেতরে `route.js`, `middleware.js`, `not-found.js` ছাড়া অন্য `.js` ফাইল (ইঙ্গিত: "helper রাখুন `services/`-এ")। `not-found.js` শুধু `routes/`-এর রুটে।
+- `api/`-এর ভেতরে `route.js`, `middleware.js`, `not-found.js` ছাড়া অন্য `.js` ফাইল (ইঙ্গিত: "helper রাখুন `services/`-এ")। `not-found.js` শুধু `api/`-এর রুটে।
 
 ### Handler
 
 ```js
-// routes/users/route.js
+// api/users/route.js
 export function GET(ctx) {
     return ctx.services.users.all();
 }
@@ -257,14 +259,14 @@ export function GET(ctx) {
 ```
 
 - `ctx.error(status, message)`: status 400–599।
-- route নেই → `404` `Not found`।
+- route নেই → `404` `Not found`। dev-এ, `not-found.js` না থাকলে, আর ঠিকানার সামনে `/api` বসালে কোনো route মিললে: ``Not found. Did you mean `/api/users`?``
 - route আছে, method নেই → `405` আর `Allow` header।
 - অন্য যেকোনো throw → `500`। dev-এ `message` আর `stack` response-এ থাকে, টার্মিনালেও ছাপা হয়। production-এ response-এ শুধু `Internal server error`; বিস্তারিত যায় stderr-এ।
 
 ### `not-found.js`
 
 ```js
-// routes/not-found.js
+// api/not-found.js
 export default function (ctx) {
     ctx.status(404);
     return { error: { status: 404, message: `No route for ${ctx.path}` } };
@@ -292,7 +294,7 @@ export default function (ctx) {
 ## ৭. Middleware
 
 ```js
-// routes/(admin)/middleware.js
+// api/(admin)/middleware.js
 export default async function (ctx, next) {
     if (ctx.headers.authorization !== `Bearer ${ctx.env.ADMIN_TOKEN}`) {
         throw ctx.error(401, 'Login required');
@@ -303,12 +305,12 @@ export default async function (ctx, next) {
 ```
 
 - একটিই export: `default`, ফাংশন `(ctx, next)`।
-- ক্রম Alo-র layout-এর মতো: `routes/middleware.js` সবার আগে, তারপর ভেতরের ফোল্ডারগুলো, শেষে handler।
+- ক্রম Alo-র layout-এর মতো: `api/middleware.js` সবার আগে, তারপর ভেতরের ফোল্ডারগুলো, শেষে handler।
 - `next()` পরের ধাপ চালায় আর তার return মান দেয় (Promise)। middleware যা return করে সেটিই response; তাই স্বাভাবিক রূপ `return next()`।
 - `next()` না ডেকে কিছু return করলে handler চলে না, সেই মানই response।
 - `next()`-এর পরে কাজ করা যায় (যেমন সময় মাপা, header বসানো)।
 - একই request-এ `next()` দুবার ডাকলে ভুল।
-- `404` আর `405`-এ শুধু রুটের `routes/middleware.js` চলে (লগের মতো কাজ যেন সবখানে হয়); ভেতরের ফোল্ডারের middleware চলে না।
+- `404` আর `405`-এ শুধু রুটের `api/middleware.js` চলে (লগের মতো কাজ যেন সবখানে হয়); ভেতরের ফোল্ডারের middleware চলে না।
 
 ---
 
@@ -420,9 +422,9 @@ export default ({ db }) => ({
 ## ১২. সার্ভার
 
 - `adhar dev`:
-  - parent প্রসেস `routes/`, `services/`, `migrations/`, `.env` দেখে (`fs.watch`, recursive, ছোট debounce); বদল হলে worker প্রসেস বন্ধ করে নতুন চালায়। ESM-এর cache মোছা যায় না, তাই restart।
+  - parent প্রসেস `api/`, `services/`, `migrations/`, `.env` দেখে (`fs.watch`, recursive, ছোট debounce); বদল হলে worker প্রসেস বন্ধ করে নতুন চালায়। ESM-এর cache মোছা যায় না, তাই restart।
   - worker চালুতে ভুল হলে parent বেঁচে থাকে, ভুল দেখায়, পরের বদলের অপেক্ষা করে।
-  - প্রতি request-এ এক লাইন: `GET /users 200 3ms`।
+  - প্রতি request-এ এক লাইন: `GET /api/users 200 3ms`।
   - পোর্ট ব্যস্ত হলে পরিষ্কার ভুল আর `--port`-এর ইঙ্গিত।
 - `adhar start`: একটি প্রসেস, watch নেই। request লগ একই ধরনের। `SIGTERM`/`SIGINT`-এ নতুন সংযোগ নেওয়া বন্ধ, চলমান request শেষ, DB বন্ধ, তারপর exit (সর্বোচ্চ ১০ সেকেন্ড)।
 - handler-এর ভুলে প্রসেস মরে না; `unhandledRejection` লগ হয়।
@@ -434,14 +436,14 @@ export default ({ db }) => ({
 `AdharError` (Alo-র `AloError`-এর মতো): `message`, `file`, `line`, `hint`। ছাপার ধরন:
 
 ```
-✖ Error: Unknown export `get` in routes/users/route.js
+✖ Error: Unknown export `get` in api/users/route.js
 
   Hint: Did you mean `GET`? Method names are uppercase.
 ```
 
 চালুর সময়ের ভুলগুলো (অংশ ৫, ৭, ৮, ৯, ১০-এ বলা) সব এই ধরনে। সম্ভব হলে `suggest()` দিয়ে কাছাকাছি নাম।
 
-সতর্কবার্তা (চালু থামে না): `routes/`-এ কোনো route নেই; `.env`-এ `CORS_ORIGIN=*` আর `NODE_ENV=production`।
+সতর্কবার্তা (চালু থামে না): `api/`-এ কোনো route নেই; `.env`-এ `CORS_ORIGIN=*` আর `NODE_ENV=production`।
 
 ---
 
@@ -453,8 +455,8 @@ adhar dev [--port 8134]           dev server, restarts on change
 adhar start [--port 8134]         production server
 adhar routes                      list all routes
 adhar migrate                     run pending migrations
-adhar new route "users/[id]"      routes/users/[id]/route.js
-adhar new middleware "(admin)"    routes/(admin)/middleware.js
+adhar new route "users/[id]"      api/users/[id]/route.js
+adhar new middleware "(admin)"    api/(admin)/middleware.js
 adhar new service blog/posts      services/blog/posts.js
 adhar new migration create-posts  migrations/<next number>-create-posts.sql
 adhar --help
@@ -465,12 +467,13 @@ adhar --version
 - `adhar routes`-এর আউটপুট:
 
 ```
-GET     /users          routes/users/route.js
-POST    /users          routes/users/route.js
-GET     /users/:id      routes/users/[id]/route.js
+GET     /api/users      api/users/route.js
+POST    /api/users      api/users/route.js
+GET     /api/users/:id  api/users/[id]/route.js
 ```
 
 - `new` আগে থেকে থাকা ফাইল বদলায় না; ভুল দেয়।
+- `new route` আর `new middleware`-এর নাম `api/`-র সাপেক্ষে; নামের শুরুতে `api/` বা `routes/` দিলে ভুল (`adhar new route api/notes` হতো `/api/api/notes`)।
 - `new route`-এর টেমপ্লেটে একটি `GET`; `new migration` পরের নম্বর নিজে বসায়।
 
 ---
@@ -493,7 +496,7 @@ adhar/
 │   └── log.js
 ├── core/
 │   ├── app.js          ← createApp(root): সব লোড, যাচাই; handle(), inject(), close()
-│   ├── router.js       ← routes/ স্ক্যান, মেলানো
+│   ├── router.js       ← api/ স্ক্যান, মেলানো
 │   ├── context.js      ← ctx
 │   ├── middleware.js   ← চেইন
 │   ├── validate.js     ← schema
@@ -533,7 +536,7 @@ Alo থেকে কপি করে মানিয়ে নেওয়া (d
 
 ```js
 const app = await createApp(projectRoot);
-const res = await app.inject({ method: 'POST', path: '/users', body: { name: 'A', email: 'a@b.c' } });
+const res = await app.inject({ method: 'POST', path: '/api/users', body: { name: 'A', email: 'a@b.c' } });
 // res: { status, headers, body }  ← body পার্স করা JSON
 await app.close();
 ```
@@ -546,11 +549,11 @@ await app.close();
 
 ছোট কিন্তু অংশ ০-এর আটটি বিষয়ই দেখায়:
 
-- `routes/route.js`: `{ name, version }`
-- `routes/middleware.js`: `X-Response-Time` header (`next()`-এর পরে কাজের উদাহরণ)
-- `routes/notes/route.js`: `GET` (তালিকা), `POST` (schema সহ)
-- `routes/notes/[id]/route.js`: `GET`, `PATCH`, `DELETE`, 404-এর উদাহরণ
-- `routes/(admin)/middleware.js` + `routes/(admin)/stats/route.js`: token যাচাই
+- `api/route.js`: `{ name, version }`
+- `api/middleware.js`: `X-Response-Time` header (`next()`-এর পরে কাজের উদাহরণ)
+- `api/notes/route.js`: `GET` (তালিকা), `POST` (schema সহ)
+- `api/notes/[id]/route.js`: `GET`, `PATCH`, `DELETE`, 404-এর উদাহরণ
+- `api/(admin)/middleware.js` + `api/(admin)/stats/route.js`: token যাচাই
 - `services/notes.js`
 - `migrations/001-create-notes.sql`
 - `.env`, `.env.example`: `PORT`, `ADMIN_TOKEN`
@@ -599,7 +602,7 @@ Alo-র README-র ক্রম অনুসরণ: Adhar কী → শুর�
 
 ## ২০. গ্রহণযোগ্যতার মানদণ্ড
 
-- `npx @msilabs/adhar init x && cd x && npm install && node adhar dev` কাজ করে, আর `curl localhost:8134/notes` JSON দেয়
+- `npx @msilabs/adhar init x && cd x && npm install && node adhar dev` কাজ করে, আর `curl localhost:8134/api/notes` JSON দেয়
 - অংশ ০-এর আটটি বিষয়ের প্রতিটি টেমপ্লেটে আছে আর টেস্টে ঢাকা
 - `package.json`-এ কোনো dependency নেই
 - Node 22.13, 24, 26-এ সব টেস্ট পাস
