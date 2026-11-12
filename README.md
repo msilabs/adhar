@@ -10,7 +10,7 @@ Adhar হলো [Alo](https://github.com/msilabs/alo)-র জোড়া। Alo
 
 ## Adhar কী
 
-Adhar একটি সার্ভার ফ্রেমওয়ার্ক, শুধু JSON API-র জন্য। আপনি `routes/` ফোল্ডারে ফাইল রাখেন; ফোল্ডারের নামই URL, আর ফাইলের ভেতরের `GET`, `POST` নামের ফাংশনই handler। ফাংশন যা return করে, তা-ই JSON হয়ে ক্লায়েন্টে যায়।
+Adhar একটি সার্ভার ফ্রেমওয়ার্ক, শুধু JSON API-র জন্য। আপনি `api/` ফোল্ডারে ফাইল রাখেন; ফোল্ডারের নামই URL (তাই সব ঠিকানা `/api` দিয়ে শুরু), আর ফাইলের ভেতরের `GET`, `POST` নামের ফাংশনই handler। ফাংশন যা return করে, তা-ই JSON হয়ে ক্লায়েন্টে যায়।
 
 কোনো নতুন ভাষা নেই, ফ্রেমওয়ার্ক `import` করতে হয় না, কোনো কনফিগারেশন ফাইল নেই। Adhar নিজেও কোনো npm প্যাকেজের ওপর নির্ভর করে না; ডেটাবেস হিসেবে ব্যবহার করে Node.js-এর নিজস্ব SQLite।
 
@@ -28,8 +28,8 @@ node adhar dev
 এবার আরেকটি টার্মিনালে:
 
 ```bash
-curl http://localhost:8134/notes
-curl -X POST http://localhost:8134/notes -H "Content-Type: application/json" -d '{"title":"প্রথম নোট"}'
+curl http://localhost:8134/api/notes
+curl -X POST http://localhost:8134/api/notes -H "Content-Type: application/json" -d '{"title":"প্রথম নোট"}'
 ```
 
 যেকোনো ফাইল বদলে সংরক্ষণ করলে সার্ভার নিজে থেকে নতুন করে চালু হয়।
@@ -51,9 +51,9 @@ Claude, ChatGPT, Cursor বা Copilot-এর মতো AI সহকারী Ad
 
 এটুকু জানলেই কাজ শুরু করা যায়।
 
-1. **Route:** `routes/users/route.js` মানে `/users`। ফাইলে `GET`, `POST`, `PUT`, `PATCH`, `DELETE` নামে ফাংশন export করুন।
+1. **Route:** `api/users/route.js` মানে `/api/users`। ফাইলে `GET`, `POST`, `PUT`, `PATCH`, `DELETE` নামে ফাংশন export করুন।
 2. **উত্তর:** ফাংশন যা return করে, তা-ই JSON হয়ে যায়।
-3. **ডায়নামিক route:** `routes/users/[id]/route.js` মানে `/users/:id`; মান থাকে `ctx.params.id`-তে।
+3. **ডায়নামিক route:** `api/users/[id]/route.js` মানে `/api/users/:id`; মান থাকে `ctx.params.id`-তে।
 4. **Middleware:** `middleware.js` তার ফোল্ডারের সব route-এর আগে চলে। পরের ধাপে যেতে `next()`।
 5. **Service:** `services/users.js` হয় `ctx.services.users`। ফোল্ডারে থাকলে `services/blog/posts.js` হয় `ctx.services.blog.posts`।
 6. **Database:** `ctx.db` দিয়ে SQL চালানো। টেবিল বানানো হয় `migrations/001-নাম.sql` ফাইলে।
@@ -79,8 +79,8 @@ Claude, ChatGPT, Cursor বা Copilot-এর মতো AI সহকারী Ad
 
 | Alo | Adhar |
 | --- | --- |
-| `pages/about/page.alo` → `/about/` | `routes/users/route.js` → `/users` |
-| `pages/blog/[slug]/page.alo` | `routes/users/[id]/route.js` |
+| `pages/about/page.alo` → `/about/` | `api/users/route.js` → `/api/users` |
+| `pages/blog/[slug]/page.alo` | `api/users/[id]/route.js` |
 | `layout.alo` আর `<slot />` | `middleware.js` আর `next()` |
 | `(site)/` route গ্রুপ | `(admin)/` route গ্রুপ |
 | `components/blog/PostCard.alo` → `<Blog.PostCard />` | `services/blog/posts.js` → `ctx.services.blog.posts` |
@@ -93,23 +93,23 @@ Claude, ChatGPT, Cursor বা Copilot-এর মতো AI সহকারী Ad
 ফোল্ডারই URL:
 
 ```
-routes/
+api/
 ├── middleware.js         ← সব route-এ চলে
-├── route.js              → /
+├── route.js              → /api
 ├── users/
-│   ├── route.js          → /users
+│   ├── route.js          → /api/users
 │   └── [id]/
-│       └── route.js      → /users/:id
+│       └── route.js      → /api/users/:id
 └── (admin)/
     ├── middleware.js     ← শুধু এই গ্রুপে
     └── stats/
-        └── route.js      → /stats
+        └── route.js      → /api/stats
 ```
 
 একটি route ফাইল:
 
 ```js
-// routes/users/[id]/route.js
+// api/users/[id]/route.js
 export function GET(ctx) {
     const user = ctx.services.users.find(ctx.params.id);
     if (!user) throw ctx.error(404, 'User not found');
@@ -123,11 +123,12 @@ export function DELETE(ctx) {
 
 নিয়ম:
 
-- `[নাম]` ফোল্ডার URL-এর একটি অংশের সাথে মেলে। একাধিক লেভেলে থাকতে পারে: `routes/users/[id]/posts/[postId]/route.js`।
+- ফোল্ডারের নাম `api`, তাই সব ঠিকানা `/api` দিয়ে শুরু। `/api`-র বাইরের ঠিকানা (`/`, `/users`) সবসময় `404`।
+- `[নাম]` ফোল্ডার URL-এর একটি অংশের সাথে মেলে। একাধিক লেভেলে থাকতে পারে: `api/users/[id]/posts/[postId]/route.js`।
 - `(নাম)` ফোল্ডার URL-এ আসে না; শুধু সাজানো আর middleware ভাগ করার জন্য।
-- স্থির ফোল্ডার ডায়নামিকের আগে মেলে: `/users/me` যায় `users/me/route.js`-এ।
+- স্থির ফোল্ডার ডায়নামিকের আগে মেলে: `/api/users/me` যায় `users/me/route.js`-এ।
 - ফোল্ডারের নাম: ছোট হাতের অক্ষর, সংখ্যা আর `-`।
-- `routes/`-এর ভেতরে শুধু তিনটি নামের ফাইল থাকে: `route.js`, `middleware.js`, `not-found.js`। বাকি কোড রাখুন `services/`-এ।
+- `api/`-এর ভেতরে শুধু তিনটি নামের ফাইল থাকে: `route.js`, `middleware.js`, `not-found.js`। বাকি কোড রাখুন `services/`-এ।
 - handler `async` হতে পারে।
 
 handler যা return করে:
@@ -141,10 +142,10 @@ handler যা return করে:
 
 নিজে থেকে যা ঘটে:
 
-- route নেই → `404`।
+- route নেই → `404`। dev-এ ঠিকানায় শুধু `/api` বাদ পড়লে বার্তায় ইঙ্গিত থাকে: ``Did you mean `/api/users`?``
 - route আছে কিন্তু method-এর ফাংশন নেই → `405`, সাথে `Allow` header।
 - `HEAD` চলে `GET` দিয়ে, body ছাড়া। `OPTIONS` নিজে উত্তর পায়।
-- শেষের `/` উপেক্ষিত: `/users/` আর `/users` একই।
+- শেষের `/` উপেক্ষিত: `/api/users/` আর `/api/users` একই।
 
 সব ভুলের আকার একই:
 
@@ -157,7 +158,7 @@ handler-এ অপ্রত্যাশিত ভুল হলে `500` যা�
 ## Middleware
 
 ```js
-// routes/(admin)/middleware.js
+// api/(admin)/middleware.js
 export default function (ctx, next) {
     if (ctx.headers.authorization !== `Bearer ${ctx.env.ADMIN_TOKEN}`) {
         throw ctx.error(401, 'Login required');
@@ -168,7 +169,7 @@ export default function (ctx, next) {
 ```
 
 - ফাইলে একটিই export: `default`, ফাংশন `(ctx, next)`।
-- ক্রম Alo-র লেআউটের মতো: `routes/middleware.js` সবার আগে, তারপর ভেতরের ফোল্ডারগুলো, শেষে handler।
+- ক্রম Alo-র লেআউটের মতো: `api/middleware.js` সবার আগে, তারপর ভেতরের ফোল্ডারগুলো, শেষে handler।
 - `return next()` মানে পরের ধাপে যাও। `next()` না ডেকে কিছু return করলে handler চলে না, সেই মানই উত্তর।
 - handler-এর পরে কাজ করতে চাইলে:
 
@@ -181,12 +182,12 @@ export default async function (ctx, next) {
 }
 ```
 
-`404`, `405` আর `OPTIONS`-এ শুধু `routes/middleware.js` চলে।
+`404`, `405` আর `OPTIONS`-এ শুধু `api/middleware.js` চলে।
 
 ## ভ্যালিডেশন
 
 ```js
-// routes/users/route.js
+// api/users/route.js
 export const schema = {
     GET: { query: { page: 'integer?', search: 'string?' } },
     POST: { body: { name: 'string', email: 'email', age: 'number?' } },
@@ -326,8 +327,8 @@ node adhar dev [--port 8134]           # dev সার্ভার; ফাইল
 node adhar start [--port 8134]         # production সার্ভার
 node adhar routes                      # সব route-এর তালিকা
 node adhar migrate                     # বাকি migration চালানো
-node adhar new route "users/[id]"      # routes/users/[id]/route.js
-node adhar new middleware "(admin)"    # routes/(admin)/middleware.js
+node adhar new route "users/[id]"      # api/users/[id]/route.js
+node adhar new middleware "(admin)"    # api/(admin)/middleware.js
 node adhar new service blog/posts      # services/blog/posts.js
 node adhar new migration create-posts  # migrations/<পরের নম্বর>-create-posts.sql
 node adhar --help
@@ -344,7 +345,7 @@ node adhar --version
 | `500`-এর বিস্তারিত | response-এ দেখায় | শুধু সার্ভারের লগে |
 | `ctx.env.NODE_ENV` | `development` | `production` |
 
-- দুটোতেই প্রতি request-এ এক লাইন ছাপা হয়: `GET /users 200 3ms`।
+- দুটোতেই প্রতি request-এ এক লাইন ছাপা হয়: `GET /api/users 200 3ms`।
 - `start` বন্ধ করলে (Ctrl+C বা হোস্টের থামানোর সংকেত) চলমান request শেষ হয়, তারপর ডেটাবেস বন্ধ হয়।
 
 ## টেস্ট লেখা
@@ -360,7 +361,7 @@ import { createApp } from '@msilabs/adhar';
 test('নোট তৈরি হয়', async () => {
     const app = await createApp(process.cwd(), { env: { DATABASE_PATH: ':memory:' } });
 
-    const res = await app.inject({ method: 'POST', path: '/notes', body: { title: 'দুধ কিনতে হবে' } });
+    const res = await app.inject({ method: 'POST', path: '/api/notes', body: { title: 'দুধ কিনতে হবে' } });
     assert.equal(res.status, 201);
     assert.equal(res.body.title, 'দুধ কিনতে হবে');
 
@@ -398,7 +399,7 @@ Adhar-এর `.env`:
 CORS_ORIGIN=https://my-site.example.com
 ```
 
-নিজের কম্পিউটারে দুটো একসাথে চালানো যায়: `node alo dev` চলে `http://localhost:3000`-এ, `node adhar dev` চলে `http://localhost:8134`-এ। তখন Adhar-এর `.env`-এ লিখুন `CORS_ORIGIN=http://localhost:3000`, আর Alo থেকে ডাকুন `http://localhost:8134/notes`।
+নিজের কম্পিউটারে দুটো একসাথে চালানো যায়: `node alo dev` চলে `http://localhost:3000`-এ, `node adhar dev` চলে `http://localhost:8134`-এ। তখন Adhar-এর `.env`-এ লিখুন `CORS_ORIGIN=http://localhost:3000`, আর Alo থেকে ডাকুন `http://localhost:8134/api/notes`।
 
 Alo-র কোনো কম্পোনেন্টে:
 
@@ -414,7 +415,7 @@ Alo-র কোনো কম্পোনেন্টে:
     $el.querySelector('form').addEventListener('submit', async (event) => {
         event.preventDefault();
         const title = new FormData(event.target).get('title');
-        const res = await fetch('https://api.example.com/notes', {
+        const res = await fetch('https://api.example.com/api/notes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title }),
@@ -443,13 +444,13 @@ export function GET({ params, services, error }) {
 ### নিজের 404
 
 ```js
-// routes/not-found.js
+// api/not-found.js
 export default function (ctx) {
     return { error: { status: 404, message: `${ctx.path} বলে কিছু নেই` } };
 }
 ```
 
-ফাইলটি শুধু `routes/`-এর রুটে থাকে।
+ফাইলটি শুধু `api/`-এর রুটে থাকে।
 
 ### ভুল ধরা middleware-এ
 
@@ -498,7 +499,7 @@ Adhar-এর `ctx.db` শুধু SQLite। অন্য ডেটাবেস 
 
 **লগইন আর ব্যবহারকারীর অনুমতি কীভাবে করব?**
 
-v1-এ তৈরি auth নেই। একটি middleware-এ header থেকে token পড়ে যাচাই করুন (`init` প্রজেক্টের `routes/(admin)/middleware.js` দেখুন), আর ব্যবহারকারীর তথ্য রাখুন `ctx.state`-এ। password hash করতে Node.js-এর `node:crypto`-র `scrypt` ব্যবহার করুন।
+v1-এ তৈরি auth নেই। একটি middleware-এ header থেকে token পড়ে যাচাই করুন (`init` প্রজেক্টের `api/(admin)/middleware.js` দেখুন), আর ব্যবহারকারীর তথ্য রাখুন `ctx.state`-এ। password hash করতে Node.js-এর `node:crypto`-র `scrypt` ব্যবহার করুন।
 
 **TypeScript?**
 
@@ -509,11 +510,20 @@ Adhar সাধারণ JS ফাইল লোড করে; কোনো ব�
 সার্ভার চালুর সময়ই সব route, schema, middleware আর service যাচাই হয়। ভুল থাকলে ফাইল আর সমাধানের ইঙ্গিত আসে:
 
 ```
-✖ Error: routes/users/route.js
+✖ Error: api/users/route.js
   Unknown export `get`.
 
   Hint: Did you mean `GET`? Method names are upper-case.
 ```
+
+## 1.0 থেকে আপগ্রেড
+
+1.1.0-তে `routes/` ফোল্ডারের নাম হয়েছে `api/`, আর সব ঠিকানা `/api` দিয়ে শুরু হয়। কারণ: পরে একই প্রজেক্টে Alo-র সাইট যোগ হলে API-র কোনো ঠিকানা বদলাতে হবে না।
+
+1. `routes/` ফোল্ডারের নাম বদলে `api/` করুন।
+2. যারা এই API ডাকে (ফ্রন্টএন্ড, মোবাইল অ্যাপ, টেস্ট), তাদের ঠিকানায় `/api` যোগ করুন: `/notes` হয় `/api/notes`।
+
+পুরনো `routes/` ফোল্ডার থাকলে Adhar চালু হয় না, আর কী করতে হবে তা বলে দেয়।
 
 ## যা Adhar ইচ্ছাকৃতভাবে করে না, আর কেন
 
