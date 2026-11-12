@@ -1,6 +1,6 @@
 {
     "name": "@msilabs/adhar",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Lightweight backend API framework: folder routes, middleware, validation, services and SQLite. Zero dependencies.",
     "license": "MIT",
     "keywords": [
