@@ -231,19 +231,27 @@ test('adhar dev serves the site and the API on one port, with live reload', asyn
     assert.match(home, /__alo\/reload/);
     assert.deepEqual(await (await get('/api/notes')).json(), [{ title: 'first' }]);
     assert.match(await (await get('/nope/', 404)).text(), /No such page/);
-    assert.equal((await fetch(`${base}/`, { method: 'POST', body: 'x' })).status, 405);
+    await eventually(async () => assert.equal((await fetch(`${base}/`, { method: 'POST', body: 'x' })).status, 405));
 
-    // The live reload stream comes through the proxy and stays open.
-    const stream = await get('/__alo/reload');
-    assert.equal(stream.headers.get('content-type'), 'text/event-stream');
-    const reader = stream.body.getReader();
-    assert.match(Buffer.from((await reader.read()).value).toString(), /retry: 1000/);
-
-    // A page that changes is rebuilt by Alo, and the open stream is told to reload.
-    fs.writeFileSync(path.join(root, 'web', 'pages', 'page.alo'), '<template><h1>Changed page</h1></template>\n');
-    await eventually(async () => assert.match(await (await fetch(`${base}/`)).text(), /Changed page/));
-    assert.match(Buffer.from((await reader.read()).value).toString(), /data: reload/);
-    await reader.cancel();
+    // The live reload stream comes through the proxy and stays open; a page that changes is rebuilt
+    // by Alo, and the open stream is told to reload. On Windows a late file event can restart the
+    // worker and cut the stream, so the whole exchange is tried again.
+    let attempt = 0;
+    await eventually(async () => {
+        attempt++;
+        const stream = await fetch(`${base}/__alo/reload`);
+        assert.equal(stream.headers.get('content-type'), 'text/event-stream');
+        const reader = stream.body.getReader();
+        const read = async () => Buffer.from((await reader.read()).value ?? '').toString();
+        try {
+            assert.match(await read(), /retry: 1000/);
+            fs.writeFileSync(path.join(root, 'web', 'pages', 'page.alo'), `<template><h1>Changed page ${attempt}</h1></template>\n`);
+            assert.match(await read(), /data: reload/);
+        } finally {
+            await reader.cancel().catch(() => {});
+        }
+    });
+    await eventually(async () => assert.match(await (await fetch(`${base}/`)).text(), new RegExp(`Changed page ${attempt}<`)));
 
     // The terminal shows one address, Adhar's; only the API and the site's failures get a request line.
     await dev.waitFor(/GET \/nope\/ 404 \d+ms/);
