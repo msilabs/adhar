@@ -28,3 +28,13 @@ jobs:
                   node-version: ${{ matrix.node }}
             - run: npm ci
             - run: npm test
+            # Job logs are not public, so the failing tests are repeated as an annotation.
+            - if: failure()
+              shell: bash
+              run: |
+                  out=$(node --test "test/**/*.test.js" 2>&1 | grep -v "^ *at " | grep -A16 "^✖" | head -120 || true)
+                  out="${out//'%'/'%25'}"
+                  out="${out//$'\r'/}"
+                  out="${out//$'\n'/'%0A'}"
+                  echo "::error title=Failing tests::$out"
+                  exit 1
