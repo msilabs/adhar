@@ -6,16 +6,22 @@ const { spawn } = require('node:child_process');
 
 const BIN = path.join(__dirname, '..', '..', 'bin', 'adhar.js');
 
-// Asks the OS for a port that is free right now.
-function freePort() {
-    return new Promise((resolve, reject) => {
+// Picks a port that is free right now. It stays below the range the OS hands out by itself, because
+// test files run side by side and `adhar dev` asks the OS for a port for Alo: a port the OS gave to
+// one test could be given out again before that test's server had started.
+function tryPort(port) {
+    return new Promise((resolve) => {
         const server = net.createServer();
-        server.once('error', reject);
-        server.listen(0, '127.0.0.1', () => {
-            const { port } = server.address();
-            server.close(() => resolve(port));
-        });
+        server.once('error', () => resolve(false));
+        server.listen(port, () => server.close(() => resolve(true)));
     });
+}
+
+async function freePort() {
+    for (;;) {
+        const port = 10_000 + Math.floor(Math.random() * 20_000);
+        if (await tryPort(port)) return port;
+    }
 }
 
 // Starts `adhar <args>` as a long-running process. The process is killed when the test ends.
