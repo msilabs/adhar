@@ -133,7 +133,7 @@ test('stopping adhar dev also stops the worker', { skip: process.platform === 'w
 test('the worker does not outlive a killed adhar dev', async (t) => {
     const { adhar, base } = await startDev(t, { 'api/route.js': HELLO });
     await adhar.waitFor(/Adhar is running/);
-    assert.equal((await fetch(base + '/api')).status, 200);
+    assert.equal((await eventually(() => fetch(base + '/api'), 5000)).status, 200);
 
     adhar.child.kill('SIGKILL');
     await adhar.exited;

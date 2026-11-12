@@ -204,16 +204,19 @@ test('the new project runs under adhar dev with its own .env', async (t) => {
     await dev.waitFor(/Adhar is running/);
     const base = `http://127.0.0.1:${port}`;
 
+    // The dev server may be between two workers for a moment, so a refused connection is tried again.
+    const get = (urlPath, headers = {}) => eventually(() => fetch(base + urlPath, { headers }), 5000);
+
     await eventually(async () => assert.equal((await fetch(`${base}/api/notes`)).status, 200));
-    assert.deepEqual((await (await fetch(`${base}/api`)).json()).try, [
+    assert.deepEqual((await (await get('/api')).json()).try, [
         'GET /api/notes',
         'POST /api/notes',
         'GET /api/notes/1',
         'GET /api/stats',
     ]);
-    assert.match((await (await fetch(`${base}/notes`)).json()).error.message, /Did you mean `\/api\/notes`\?/);
-    assert.equal((await fetch(`${base}/api/stats`)).status, 401);
-    const stats = await fetch(`${base}/api/stats`, { headers: { authorization: 'Bearer change-me' } });
+    assert.match((await (await get('/notes')).json()).error.message, /Did you mean `\/api\/notes`\?/);
+    assert.equal((await get('/api/stats')).status, 401);
+    const stats = await get('/api/stats', { authorization: 'Bearer change-me' });
     assert.deepEqual(await stats.json(), { notes: 0, done: 0 });
     assert.equal(fs.existsSync(path.join(root, 'storage', 'app.db')), true);
 });
