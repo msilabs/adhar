@@ -1,0 +1,165 @@
+<head>
+    <title>শুরু করুন | {{ data.site.name }}</title>
+    <meta name="description" content="পাঁচ মিনিটে আধার দিয়ে প্রথম API বানানোর গাইড।">
+</head>
+
+<template>
+    <div class="doc-page">
+    <article class="guide">
+        <p class="eyebrow">গাইড</p>
+        <h1>পাঁচ মিনিটে প্রথম API</h1>
+        <p class="lead">Node.js ২২.১৩ বা নতুন ভার্সন থাকলেই চলবে। নিচের ধাপগুলো শেষ হলে আপনার নিজের একটি API চালু থাকবে, ডেটাবেসসহ।</p>
+
+        <ol class="steps">
+            <li>
+                <h2 id="প্রজেক্ট-বানান">প্রজেক্ট বানান</h2>
+                <pre><code>npx @msilabs/adhar init my-api
+cd my-api
+npm install
+node adhar dev</code></pre>
+                <p>আরেকটি টার্মিনালে চালান <code>curl http://localhost:8134/api/notes</code>। যেকোনো ফাইল বদলে সংরক্ষণ করলে সার্ভার নিজে থেকে নতুন করে চালু হয়।</p>
+                <p>সাইটসহ পুরো অ্যাপ চাইলে শেষে <code>--web</code> যোগ করুন; বিস্তারিত <a href="/docs/full-stack/">Full stack</a> পাতায়।</p>
+            </li>
+            <li>
+                <h2 id="ফোল্ডারগুলো-চিনুন">ফোল্ডারগুলো চিনুন</h2>
+                <pre><code>api/          ← প্রতিটি ফোল্ডার একটি ঠিকানা, /api দিয়ে শুরু
+services/     ← বারবার লাগা কোড: ctx.services
+migrations/   ← টেবিল বানানো আর বদলানোর SQL ফাইল
+storage/      ← ডেটাবেসের ফাইল (নিজে তৈরি হয়)
+.env          ← পোর্ট আর গোপন মান</code></pre>
+            </li>
+            <li>
+                <h2 id="নতুন-route-যোগ-করুন">নতুন route যোগ করুন</h2>
+                <p><code>api/hello/route.js</code> ফাইল বানালেই <code>/api/hello</code> ঠিকানা তৈরি হয়:</p>
+                <pre><code>export function GET(ctx) {
+    return { message: 'হ্যালো', name: ctx.query.name ?? 'বন্ধু' };
+}</code></pre>
+                <p>ফাংশন যা return করে, তা-ই JSON হয়ে যায়। অথবা চালান <code>node adhar new route hello</code>।</p>
+            </li>
+            <li>
+                <h2 id="ঠিকানার-অংশ-পড়ুন">ঠিকানার অংশ পড়ুন</h2>
+                <p><code>[id]</code> নামের ফোল্ডার ঠিকানার একটি অংশের সাথে মেলে; মান থাকে <code>ctx.params</code>-এ:</p>
+                <pre><code>// api/notes/[id]/route.js → /api/notes/:id
+export function GET(ctx) {
+    const note = ctx.services.notes.find(ctx.params.id);
+    if (!note) throw ctx.error(404, 'Note not found');
+    return note;
+}</code></pre>
+                <p>ভুল জানাতে <code>throw ctx.error(...)</code>; আধার সেটিকে সঠিক status-সহ JSON করে পাঠায়।</p>
+            </li>
+            <li>
+                <h2 id="ডেটাবেসে-রাখুন">ডেটাবেসে রাখুন</h2>
+                <p>টেবিল বানান একটি migration ফাইলে, আর <code>ctx.db</code> দিয়ে SQL চালান:</p>
+                <pre><code>-- migrations/002-create-tasks.sql
+CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL);</code></pre>
+                <pre><code>// api/tasks/route.js
+export const schema = { POST: { body: { title: 'string' } } };
+
+export function GET(ctx) {
+    return ctx.db.all('SELECT * FROM tasks');
+}
+
+export function POST(ctx) {
+    ctx.status(201);
+    return ctx.db.get('INSERT INTO tasks (title) VALUES (?) RETURNING *', ctx.body.title);
+}</code></pre>
+                <p><code>schema</code> থাকায় <code>title</code> ছাড়া request পায় <code>422</code>, handler চলার আগেই।</p>
+            </li>
+            <li>
+                <h2 id="প্রকাশ-করুন">প্রকাশ করুন</h2>
+                <pre><code>node adhar migrate
+node adhar start</code></pre>
+                <p>যেখানে Node.js আর একটি স্থায়ী ডিস্ক আছে, সেখানেই চলে। বিস্তারিত <a href="/docs/deploy/">ডিপ্লয়</a> পাতায়।</p>
+            </li>
+        </ol>
+
+        <Card title="আরও জানতে" class="next">
+            <p>প্রতিটি বিষয়ের বিস্তারিত আছে পাশের সূচিতে: <a href="/docs/routes/">route</a>, <a href="/docs/middleware/">middleware</a>, <a href="/docs/validation/">ভ্যালিডেশন</a>, <a href="/docs/services/">service</a>, <a href="/docs/database/">database</a> আর <a href="/docs/full-stack/">full stack</a>।</p>
+        </Card>
+        <Docs.Pager />
+    </article>
+    <Docs.Toc headings="{{ [
+        { id: 'প্রজেক্ট-বানান', label: 'প্রজেক্ট বানান' },
+        { id: 'ফোল্ডারগুলো-চিনুন', label: 'ফোল্ডারগুলো চিনুন' },
+        { id: 'নতুন-route-যোগ-করুন', label: 'নতুন route যোগ করুন' },
+        { id: 'ঠিকানার-অংশ-পড়ুন', label: 'ঠিকানার অংশ পড়ুন' },
+        { id: 'ডেটাবেসে-রাখুন', label: 'ডেটাবেসে রাখুন' },
+        { id: 'প্রকাশ-করুন', label: 'প্রকাশ করুন' },
+    ] }}" />
+    </div>
+</template>
+
+<style>
+    .guide {
+        max-width: var(--reading);
+    }
+
+    h1 {
+        margin-block: 0.5rem 1rem;
+        font-size: clamp(2rem, 5vw, 2.8rem);
+    }
+
+    .lead {
+        color: var(--muted);
+        font-size: 1.15rem;
+    }
+
+    .steps {
+        margin: 3rem 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: step;
+    }
+
+    .steps > li {
+        position: relative;
+        padding: 0 0 2.5rem 3.25rem;
+        counter-increment: step;
+    }
+
+    .steps > li::before {
+        content: counter(step, bengali);
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: grid;
+        place-items: center;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--on-accent);
+        font-weight: 700;
+    }
+
+    .steps > li::after {
+        content: '';
+        position: absolute;
+        top: 2.6rem;
+        bottom: 0.4rem;
+        left: 1.05rem;
+        width: 2px;
+        background: var(--border);
+    }
+
+    .steps > li:last-child::after {
+        display: none;
+    }
+
+    h2 {
+        margin-bottom: 0.75rem;
+        font-size: 1.3rem;
+    }
+
+    .steps p {
+        margin-block: 0.75rem;
+    }
+
+    .rules {
+        padding-left: 1.25rem;
+    }
+
+    .rules li {
+        margin-block: 0.4rem;
+    }
+</style>

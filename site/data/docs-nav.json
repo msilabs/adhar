@@ -1,0 +1,50 @@
+[
+    {
+        "title": "শুরু",
+        "items": [
+            { "href": "/docs/", "label": "দ্রুত শুরু" },
+            { "href": "/docs/overview/", "label": "এক পাতায় আধার" }
+        ]
+    },
+    {
+        "title": "মূল ধারণা",
+        "items": [
+            { "href": "/docs/routes/", "label": "Route" },
+            { "href": "/docs/middleware/", "label": "Middleware" },
+            { "href": "/docs/validation/", "label": "ভ্যালিডেশন" },
+            { "href": "/docs/services/", "label": "Service" },
+            { "href": "/docs/database/", "label": "Database আর migration" },
+            { "href": "/docs/env/", "label": ".env আর CORS" }
+        ]
+    },
+    {
+        "title": "আলোর সাথে",
+        "items": [
+            { "href": "/docs/full-stack/", "label": "Full stack" },
+            { "href": "/docs/with-alo/", "label": "আলাদা প্রজেক্ট হিসেবে" }
+        ]
+    },
+    {
+        "title": "প্রকাশ",
+        "items": [
+            { "href": "/docs/testing/", "label": "টেস্ট লেখা" },
+            { "href": "/docs/deploy/", "label": "ডিপ্লয়" }
+        ]
+    },
+    {
+        "title": "টুলস",
+        "items": [
+            { "href": "/docs/cli/", "label": "কমান্ড" },
+            { "href": "/docs/ai/", "label": "AI সহকারী দিয়ে কাজ" }
+        ]
+    },
+    {
+        "title": "রেফারেন্স",
+        "items": [
+            { "href": "/docs/more/", "label": "আরও কিছু" },
+            { "href": "/docs/faq/", "label": "সাধারণ প্রশ্ন" },
+            { "href": "/docs/upgrade/", "label": "1.0 থেকে আপগ্রেড" },
+            { "href": "/docs/not-adhar/", "label": "যা আধার করে না" }
+        ]
+    }
+]

@@ -1,0 +1,221 @@
+<head>
+    <title>{{ data.site.name }}: {{ data.site.tagline }}</title>
+</head>
+
+<template>
+    <section class="hero">
+        <div class="container">
+            <p class="eyebrow">হালকা backend API ফ্রেমওয়ার্ক</p>
+            <h1>ফোল্ডারে ফাংশন লিখুন,<br>পান JSON API</h1>
+            <p class="lead">
+                রাউটিং, middleware, ভ্যালিডেশন, service আর SQLite ডেটাবেস, সাধারণ JavaScript ফাংশন লিখে।
+                Node.js ছাড়া আর কিছু লাগে না। আলোর সাথে মিলে এক প্রজেক্টে পুরো full stack অ্যাপ।
+            </p>
+            <div class="actions">
+                <a class="button button-primary" href="/docs/">শুরু করুন</a>
+                <a class="button" href="{{ data.site.repository }}">GitHub-এ দেখুন</a>
+            </div>
+            <pre class="install"><code><span class="prompt">$</span> npx @msilabs/adhar init my-api</code></pre>
+        </div>
+    </section>
+
+    <section class="section container">
+        <header class="section-head">
+            <p class="eyebrow">যা যা পাবেন</p>
+            <h2>ছোট API-র যা লাগে, তার সবটুকু</h2>
+        </header>
+        <div class="grid features-grid">
+            <template for="feature in data.features.filter((f) => f.status === 'stable')">
+                <Feature feature="{{ feature }}" />
+            </template>
+        </div>
+    </section>
+
+    <section class="section container split">
+        <div>
+            <p class="eyebrow">দেখতে ঠিক সাধারণ JS-এর মতো</p>
+            <h2>একটি ফাইল, একটি ঠিকানা</h2>
+            <p>
+                <code>api/</code> ফোল্ডারে একটি <code>route.js</code> রাখলেই সেটি একটি ঠিকানা। <code>GET</code>, <code>POST</code> নামের ফাংশন
+                যা return করে, তা-ই JSON হয়ে ক্লায়েন্টে যায়। দরকারি সবকিছু আসে এক <code>ctx</code> থেকে: কোনো <code>import</code> নেই।
+            </p>
+            <a href="/docs/routes/">Route নিয়ে আরও দেখুন →</a>
+        </div>
+        <div class="code-pair">
+            <pre><code><span class="file">api/notes/route.js → /api/notes</span>
+export const schema = {
+    POST: { body: { title: 'string' } },
+};
+
+export function GET(ctx) {
+    return ctx.db.all('SELECT * FROM notes');
+}
+
+export function POST(ctx) {
+    ctx.status(201);
+    return ctx.services.notes.create(ctx.body);
+}</code></pre>
+        </div>
+    </section>
+
+    <section class="section container split">
+        <div>
+            <p class="eyebrow">আলোর সাথে full stack</p>
+            <h2>সাইট আর API, এক পোর্টে</h2>
+            <p>
+                প্রজেক্টে একটি <code>web/</code> ফোল্ডার থাকলে তার ভেতরের আলোর সাইট আর API একসাথে চলে।
+                <code>/api</code>-র নিচের ঠিকানা API-র, বাকি সব সাইটের। সাইট থেকে শুধু <code>fetch('/api/notes')</code>; CORS লাগে না।
+            </p>
+            <a href="/docs/full-stack/">Full stack নিয়ে আরও দেখুন →</a>
+        </div>
+        <div class="code-pair">
+            <pre><code><span class="file">একটি প্রজেক্ট, একটি কমান্ড</span>
+my-app/
+├── api/         ← আধার: /api/…
+├── services/
+├── migrations/
+├── web/         ← আলো: বাকি সব ঠিকানা
+└── adhar
+
+$ npx @msilabs/adhar init my-app --web
+$ node adhar dev</code></pre>
+        </div>
+    </section>
+
+    <section class="section reading">
+        <header class="section-head">
+            <p class="eyebrow">প্রশ্ন আর উত্তর</p>
+            <h2>যা প্রায়ই জানতে চাওয়া হয়</h2>
+        </header>
+        <template for="item in data.faq">
+            <Faq question="{{ item.question }}" answer="{{ item.answer }}" />
+        </template>
+    </section>
+</template>
+
+<style>
+    .hero {
+        padding-block: 6rem 4.5rem;
+        background:
+            radial-gradient(50rem 22rem at 50% -6rem, var(--accent-soft), transparent 70%),
+            var(--bg);
+        text-align: center;
+    }
+
+    h1 {
+        margin-block: 0.75rem 1.25rem;
+        font-size: clamp(2.2rem, 6vw, 3.8rem);
+        line-height: 1.25;
+    }
+
+    .lead {
+        max-width: 40rem;
+        margin-inline: auto;
+        color: var(--muted);
+        font-size: 1.15rem;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 2rem;
+    }
+
+    .install {
+        display: inline-block;
+        margin-top: 2rem;
+        padding: 0.7rem 1.2rem;
+        border-radius: 999px;
+        text-align: left;
+    }
+
+    .prompt {
+        margin-right: 0.6rem;
+        color: #a5b4fc;
+        user-select: none;
+    }
+
+    .section {
+        padding-top: 5.5rem;
+    }
+
+    .section-head {
+        margin-bottom: 2rem;
+    }
+
+    h2 {
+        margin-top: 0.4rem;
+        font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+
+    @media (max-width: 960px) {
+        .grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 600px) {
+        .grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .split {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        align-items: center;
+        gap: 3rem;
+    }
+
+    .split p {
+        margin-block: 1rem;
+        color: var(--muted);
+    }
+
+    .code-pair {
+        display: grid;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .file {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #a5b4fc;
+        font-size: 0.8rem;
+    }
+
+    @media (max-width: 860px) {
+        .split {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<style global>
+    /* A scoped style cannot reach the <Feature> roots, so this one is global. */
+    /* When the last cards would leave a gap in their row, the last one fills it. */
+    @media (min-width: 961px) {
+        .features-grid > :last-child:nth-child(3n + 1) {
+            grid-column: 1 / -1;
+        }
+
+        .features-grid > :last-child:nth-child(3n + 2) {
+            grid-column: span 2;
+        }
+    }
+
+    @media (min-width: 601px) and (max-width: 960px) {
+        .features-grid > :last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+        }
+    }
+</style>

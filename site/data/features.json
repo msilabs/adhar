@@ -1,0 +1,61 @@
+[
+    {
+        "icon": "folder",
+        "title": "ফোল্ডারই URL",
+        "text": "api/notes/route.js মানে /api/notes। ডায়নামিক অংশ [id] ফোল্ডারে, গ্রুপ (admin) ফোল্ডারে। কোনো router সাজাতে হয় না।",
+        "status": "stable"
+    },
+    {
+        "icon": "function",
+        "title": "handler সাধারণ ফাংশন",
+        "text": "GET, POST নামের ফাংশন export করুন। যা return করেন তা-ই JSON হয়ে যায়; req, res বা import কিছুই লাগে না।",
+        "status": "stable"
+    },
+    {
+        "icon": "layers",
+        "title": "ফোল্ডারভিত্তিক middleware",
+        "text": "middleware.js তার ফোল্ডারের সব route-এর আগে চলে, আলোর লেআউটের মতো। লগইন যাচাই এক জায়গায়।",
+        "status": "stable"
+    },
+    {
+        "icon": "check",
+        "title": "ভ্যালিডেশন",
+        "text": "route ফাইলে একটি schema লিখলেই ভুল ইনপুট handler পর্যন্ত পৌঁছায় না; ক্লায়েন্ট পায় কোন ফিল্ডে কী ভুল।",
+        "status": "stable"
+    },
+    {
+        "icon": "database",
+        "title": "SQLite, সেটআপ ছাড়া",
+        "text": "ctx.db দিয়ে সরাসরি SQL। টেবিল বদলায় migrations/ ফোল্ডারের ফাইল দিয়ে। আলাদা ডেটাবেস সার্ভার লাগে না।",
+        "status": "stable"
+    },
+    {
+        "icon": "speed",
+        "title": "কোনো নির্ভরতা নেই",
+        "text": "আধার নিজে কোনো npm প্যাকেজের ওপর দাঁড়িয়ে নেই। ইনস্টল কয়েক সেকেন্ডের, আর ভুল হলে ফাইল আর সমাধানের ইঙ্গিতসহ এরর।",
+        "status": "stable"
+    },
+    {
+        "icon": "robot",
+        "title": "AI সহকারীর জন্য তৈরি",
+        "text": "প্রতিটি নতুন প্রজেক্টে AGENTS.md থাকে: আধারের নিয়ম আর সাধারণ ভুলের তালিকা, যাতে AI Express ধরে না লেখে।",
+        "status": "stable"
+    },
+    {
+        "icon": "window",
+        "title": "আলোর সাথে full stack",
+        "text": "প্রজেক্টে web/ ফোল্ডার থাকলে আলোর সাইট আর API এক পোর্টে চলে, লাইভ রিলোডসহ।",
+        "status": "stable",
+        "new": true,
+        "points": [
+            "npx @msilabs/adhar init my-app --web দিয়ে শুরু",
+            "সাইট থেকে শুধু fetch('/api/notes'); CORS লাগে না",
+            "node adhar dev: এক কমান্ড, এক ঠিকানা",
+            "node adhar build আর node adhar start: এক সার্ভারে ডিপ্লয়"
+        ],
+        "link": {
+            "href": "/docs/full-stack/",
+            "label": "full stack কীভাবে কাজ করে"
+        }
+    }
+]

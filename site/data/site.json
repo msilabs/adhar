@@ -1,0 +1,8 @@
+{
+    "name": "আধার",
+    "tagline": "ফোল্ডারে ফাংশন লিখুন, পান JSON API",
+    "description": "হালকা backend API ফ্রেমওয়ার্ক: ফোল্ডারই URL, handler সাধারণ JS ফাংশন, সাথে middleware, ভ্যালিডেশন, service আর SQLite। আলোর সাথে full stack। কোনো নির্ভরতা নেই।",
+    "lang": "bn",
+    "url": "https://msilabs.github.io",
+    "repository": "https://github.com/msilabs/adhar"
+}
