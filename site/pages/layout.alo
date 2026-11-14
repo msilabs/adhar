@@ -6,7 +6,11 @@
     <meta property="og:site_name" content="{{ data.site.name }}">
     <meta property="og:url" content="{{ data.site.url }}{{ base.slice(0, -1) }}{{ route.path }}">
     <meta property="og:description" content="{{ data.site.description }}">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="{{ data.site.url }}{{ base }}og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{{ data.site.name }}: {{ data.site.tagline }}">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

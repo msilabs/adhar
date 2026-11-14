@@ -1,0 +1,132 @@
+<head>
+    <title>কেন আধার | {{ data.site.name }}</title>
+    <meta name="description" content="আধার কী ভেবে বানানো, কাদের জন্য, আর কাদের জন্য নয়।">
+</head>
+
+<template>
+    <div class="about reading">
+        <p class="eyebrow">কেন আধার</p>
+        <h1>ছোট API-র জন্য ছোট একটি টুল</h1>
+        <p class="lead">
+            একটি নোট-অ্যাপ, ফর্ম জমা নেওয়া বা ছোট একটি দোকানের API বানাতে বড় একটি ফ্রেমওয়ার্ক, ডজনখানেক প্যাকেজ আর আলাদা ডেটাবেস সার্ভার লাগার কথা নয়।
+            আধার বানানো হয়েছে কয়েকটি সহজ নীতি মেনে, আর এর সীমাও খোলাখুলি বলা আছে।
+        </p>
+
+        <ul class="principles">
+            <li>
+                <h2>ফোল্ডারই URL</h2>
+                <p><code>api/notes/route.js</code> মানে <code>/api/notes</code>। কোথায় কী আছে খুঁজতে router-এর ফাইল ঘাঁটতে হয় না।</p>
+            </li>
+            <li>
+                <h2>handler একটি সাধারণ ফাংশন</h2>
+                <p><code>GET</code>, <code>POST</code> নামে ফাংশন লিখুন; যা return করেন তা-ই JSON হয়ে যায়। <code>req</code>, <code>res</code> বা <code>import</code> লাগে না, সবকিছু আসে এক <code>ctx</code> থেকে।</p>
+            </li>
+            <li>
+                <h2>কোনো কনফিগারেশন ফাইল নেই</h2>
+                <p>middleware, service আর migration সব ঠিক হয় ফোল্ডার আর ফাইলের নাম থেকে। মনে রাখার মতো সেটিং একটিই: <code>.env</code>।</p>
+            </li>
+            <li>
+                <h2>ডেটাবেস নিয়ে ঝামেলা নেই</h2>
+                <p>Node.js-এর নিজস্ব SQLite চলে, তাই আলাদা সার্ভার, user বা password লাগে না। ডেটা থাকে একটি ফাইলে।</p>
+            </li>
+            <li>
+                <h2>কোনো নির্ভরতা নেই</h2>
+                <p>আধার নিজে কোনো npm প্যাকেজের ওপর দাঁড়িয়ে নেই, তাই ইনস্টল দ্রুত আর নির্ভর করার মতো বাইরের কিছু ভাঙে না।</p>
+            </li>
+            <li>
+                <h2>ভুল হলে পরিষ্কার করে বলা</h2>
+                <p>প্রতিটি চালুর-সময়ের ভুলে থাকে ফাইলের নাম আর সমাধানের ইঙ্গিত, যেমন "Did you mean <code>GET</code>?"।</p>
+            </li>
+        </ul>
+
+        <h2 class="block-title">কাদের জন্য</h2>
+        <ul class="plain">
+            <li>ছোট ও মাঝারি API: নোট, ফর্ম, ব্লগের ডেটা, ছোট দোকান, অ্যাডমিন প্যানেলের পেছনের কাজ।</li>
+            <li>একটি সার্ভারে চলা অ্যাপ, যেখানে একটি স্থায়ী ডিস্ক আছে (VPS, অথবা volume যুক্ত করা Railway, Render, Fly.io)।</li>
+            <li>যাঁরা <a href="https://msilabs.github.io/alo/">আলো</a> দিয়ে সাইট বানান আর তার পেছনে একটি ব্যাকএন্ড চান: দুটো <a href="/docs/full-stack/">এক প্রজেক্টে, এক পোর্টে</a> চলে।</li>
+            <li>যাঁরা সাধারণ JavaScript জানেন আর নতুন ফ্রেমওয়ার্কের নিয়ম শিখতে সময় দিতে চান না।</li>
+        </ul>
+
+        <h2 class="block-title">কাদের জন্য নয়</h2>
+        <ul class="plain">
+            <li>একই ডেটাবেস নিয়ে অনেক সার্ভারে ছড়ানো বড় অ্যাপ: SQLite একটি ফাইল, যা এক মেশিনে থাকে।</li>
+            <li>যেখানে PostgreSQL বা MySQL বাধ্যতামূলক: এগুলোর জন্য কোনো সমর্থন নেই।</li>
+            <li>Vercel, Netlify Functions বা Cloudflare Workers-এর মতো serverless হোস্টিং: সেখানে স্থায়ী প্রসেস আর ডিস্ক নেই।</li>
+            <li>যাঁদের তৈরি করা লগইন, ফাইল আপলোড, WebSocket বা GraphQL এখনই লাগে।</li>
+        </ul>
+
+        <h2 class="block-title">যা এখনো নেই</h2>
+        <p class="note">
+            তৈরি auth, cookie helper, ফাইল আপলোড, rate limit আর <code>schema</code> থেকে OpenAPI এখনো নেই। আসল ব্যবহারকারীরা চাইলে পরে ভাবা হবে, কারণ নতুন কিছু যোগ হয় তখনই, যখন সত্যিই দরকার পড়ে।
+            সম্পূর্ণ তালিকা আর কারণ আছে <a href="/docs/not-adhar/">যা আধার করে না</a> পাতায়।
+        </p>
+
+        <div class="next">
+            <a class="button button-primary" href="/docs/">শুরু করুন</a>
+            <a class="button" href="{{ data.site.repository }}/issues">কিছু চাইলে জানান</a>
+        </div>
+    </div>
+</template>
+
+<style>
+    .about {
+        padding-top: 4rem;
+    }
+
+    h1 {
+        margin-block: 0.5rem 1rem;
+        font-size: clamp(2rem, 5vw, 2.8rem);
+    }
+
+    .lead {
+        color: var(--muted);
+        font-size: 1.15rem;
+    }
+
+    .principles {
+        display: grid;
+        gap: 1.75rem;
+        margin: 3rem 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .principles li {
+        padding-left: 1.25rem;
+        border-left: 3px solid var(--accent);
+    }
+
+    .principles h2 {
+        font-size: 1.2rem;
+    }
+
+    .principles p {
+        margin-top: 0.3rem;
+        color: var(--muted);
+    }
+
+    .block-title {
+        margin: 3.5rem 0 1rem;
+        font-size: 1.6rem;
+    }
+
+    .plain {
+        margin: 0;
+        padding-left: 1.25rem;
+    }
+
+    .plain li {
+        margin-block: 0.6rem;
+    }
+
+    .note {
+        color: var(--muted);
+    }
+
+    .next {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 3rem;
+    }
+</style>
