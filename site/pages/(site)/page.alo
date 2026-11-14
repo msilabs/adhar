@@ -92,6 +92,14 @@ $ node adhar dev</code></pre>
         </div>
     </section>
 
+    <section class="section container">
+        <header class="section-head">
+            <p class="eyebrow">ব্লগ</p>
+            <h2>সাম্প্রতিক লেখা</h2>
+        </header>
+        <Blog.PostList posts="{{ data.blog.toReversed().slice(0, 3) }}" />
+    </section>
+
     <section class="section reading">
         <header class="section-head">
             <p class="eyebrow">প্রশ্ন আর উত্তর</p>

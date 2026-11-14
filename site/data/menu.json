@@ -1,5 +1,6 @@
 [
     { "href": "/", "label": "হোম" },
     { "href": "/docs/", "label": "ডকস" },
-    { "href": "/about/", "label": "কেন আধার" }
+    { "href": "/about/", "label": "কেন আধার" },
+    { "href": "/blog/", "label": "ব্লগ" }
 ]

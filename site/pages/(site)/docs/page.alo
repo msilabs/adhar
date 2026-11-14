@@ -61,7 +61,8 @@ export function GET(ctx) {
 
 export function POST(ctx) {
     ctx.status(201);
-    return ctx.db.get('INSERT INTO tasks (title) VALUES (?) RETURNING *', ctx.body.title);
+    const sql = 'INSERT INTO tasks (title) VALUES (?) RETURNING *';
+    return ctx.db.get(sql, ctx.body.title);
 }</code></pre>
                 <p><code>schema</code> থাকায় <code>title</code> ছাড়া request পায় <code>422</code>, handler চলার আগেই।</p>
             </li>
