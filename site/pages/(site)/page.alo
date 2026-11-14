@@ -15,7 +15,17 @@
                 <a class="button button-primary" href="/docs/">শুরু করুন</a>
                 <a class="button" href="{{ data.site.repository }}">GitHub-এ দেখুন</a>
             </div>
-            <pre class="install"><code><span class="prompt">$</span> npx @msilabs/adhar init my-api</code></pre>
+            <p class="choose">নতুন প্রজেক্ট শুরু করুন: যেটি দরকার, সেটি বেছে নিন</p>
+            <div class="installs">
+                <div class="install-box">
+                    <p class="install-label">শুধু API</p>
+                    <pre class="install"><code><span class="prompt">$</span> npx @msilabs/adhar init my-api</code></pre>
+                </div>
+                <div class="install-box">
+                    <p class="install-label">API আর আলোর সাইট (full stack)</p>
+                    <pre class="install"><code><span class="prompt">$</span> npx @msilabs/adhar init my-app --web</code></pre>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -123,12 +133,37 @@ $ node adhar dev</code></pre>
         margin-top: 2rem;
     }
 
-    .install {
-        display: inline-block;
-        margin-top: 2rem;
-        padding: 0.7rem 1.2rem;
-        border-radius: 999px;
+    .choose {
+        margin-top: 2.5rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+    }
+
+    .installs {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem 1.25rem;
+        margin-top: 0.9rem;
+    }
+
+    .install-box {
+        min-width: 0;
+        max-width: 100%;
         text-align: left;
+    }
+
+    .install-label {
+        margin: 0 0 0.4rem 0.25rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .install {
+        margin: 0;
+        padding: 0.8rem 1.3rem;
+        border-radius: 999px;
     }
 
     .prompt {
