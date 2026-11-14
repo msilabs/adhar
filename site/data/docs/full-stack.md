@@ -49,4 +49,4 @@ my-app/
 
 চলমান শুধু-API প্রজেক্টে সাইট যোগ করতে: `npm i -D @msilabs/alo`, তারপর `web/pages/page.alo` বানান। API-র কোনো ঠিকানা বদলায় না।
 
-`.alo` ফাইল লেখার নিয়ম [Alo-র README](https://github.com/msilabs/alo#readme)-তে।
+`.alo` ফাইল লেখার নিয়ম [Alo-র ডকসে](https://msilabs.github.io/alo/docs/)।
