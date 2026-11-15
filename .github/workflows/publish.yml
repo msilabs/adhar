@@ -13,11 +13,14 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
+              with:
+                  persist-credentials: false
             - uses: actions/setup-node@v7
               with:
                   node-version: 24
                   registry-url: https://registry.npmjs.org
-            - run: npm install -g npm@latest
+            # Pinned: an unpinned npm would run with this job's publish rights. 11.19.1 has `npm stage`.
+            - run: npm install -g npm@11.19.1
             - run: npm ci
             - run: npm test
             - run: npm stage publish
