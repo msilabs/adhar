@@ -1,6 +1,6 @@
 ## The site in `web/` (Alo)
 
-This is a full stack project: `web/` holds an Alo site, served on the same port as the API. Alo is a small static site framework; `.alo` files are plain HTML with a few extras. Do not guess from React, Vue, Astro or Svelte. The full guide is at https://raw.githubusercontent.com/msilabs/alo/main/templates/init/AGENTS.md; read it before you write more than a small change.
+This is a full stack project: `web/` holds an Alo site, served on the same port as the API. Alo is a small static site framework; `.alo` files are plain HTML with a few extras. Do not guess from React, Vue, Astro or Svelte. The full guide comes with the installed Alo, at `node_modules/@msilabs/alo/templates/init/AGENTS.md` (run `npm install` first); read it before you write more than a small change.
 
 ```
 web/
