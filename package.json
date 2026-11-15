@@ -1,6 +1,6 @@
 {
     "name": "@msilabs/adhar",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Lightweight backend API framework: folder routes, middleware, validation, services and SQLite. Full stack with Alo. Zero dependencies.",
     "license": "MIT",
     "keywords": [
@@ -44,6 +44,6 @@
         "test": "node --test \"test/**/*.test.js\""
     },
     "devDependencies": {
-        "@msilabs/alo": "^1.1.0"
+        "@msilabs/alo": "^1.2.2"
     }
 }
