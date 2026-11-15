@@ -2,7 +2,7 @@
 
 const http = require('node:http');
 const { createApp } = require('../core/app.js');
-const { loadEnv, resolvePort } = require('../core/env.js');
+const { hostEnv, loadEnv, resolvePort } = require('../core/env.js');
 const { AdharError } = require('../core/errors.js');
 const { isApiPath } = require('../core/web.js');
 const log = require('./log.js');
@@ -51,7 +51,7 @@ function proxy(req, res, webPort) {
 // error details in responses; production refuses to start while migrations are pending.
 // `webPort` is where Alo's dev server listens, in a full stack project under `adhar dev`.
 async function serve({ root, port, dev, webPort }) {
-    const env = loadEnv(root, process.env);
+    const env = loadEnv(root, hostEnv());
     if (!env.NODE_ENV) env.NODE_ENV = dev ? 'development' : 'production';
     const finalPort = resolvePort(port, env);
 

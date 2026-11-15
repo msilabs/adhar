@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { fork, spawnSync } = require('node:child_process');
+const { hostEnv } = require('../core/env.js');
 const { AdharError } = require('../core/errors.js');
 const { assertProject } = require('../core/router.js');
 const { assertNoApiClash, hasWeb } = require('../core/web.js');
@@ -36,7 +37,7 @@ function findAlo(root) {
     }
 }
 
-function requireAlo(root, env = process.env) {
+function requireAlo(root, env = hostEnv()) {
     const alo = findAlo(root);
     if (!alo) {
         throw new AdharError({
@@ -144,4 +145,4 @@ function startAloDev(root, port) {
     return child;
 }
 
-module.exports = { findAlo, requireAlo, build, web, startAloDev, createLineFilter };
+module.exports = { findAlo, requireAlo, build, web, startAloDev, createLineFilter, fork };

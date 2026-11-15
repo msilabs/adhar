@@ -13,6 +13,11 @@ function loadEnv(root, processEnv = {}) {
     return { ...fromFile, ...processEnv };
 }
 
+// The one place Adhar reads the real environment; everything else asks here.
+function hostEnv() {
+    return process.env;
+}
+
 // `--port` wins over PORT, and PORT over 8134.
 function resolvePort(flag, env) {
     if (flag !== undefined) return flag;
@@ -28,4 +33,4 @@ function resolvePort(flag, env) {
     return port;
 }
 
-module.exports = { loadEnv, resolvePort };
+module.exports = { hostEnv, loadEnv, resolvePort };

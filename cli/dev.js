@@ -2,11 +2,12 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const net = require('node:net');
-const { fork } = require('node:child_process');
+const http = require('node:http');
 const { assertProject } = require('../core/router.js');
+const { hostEnv } = require('../core/env.js');
 const { assertNoApiClash, hasWeb } = require('../core/web.js');
 const log = require('./log.js');
+const { fork, startAloDev } = require('./web.js');
 
 const WORKER = path.join(__dirname, 'worker.js');
 const WATCHED_FOLDERS = ['api', 'services', 'migrations'];
@@ -50,7 +51,7 @@ function watchProject(root, onChange) {
 // Asks the OS for a free port on localhost, for Alo's dev server.
 function freePort() {
     return new Promise((resolve, reject) => {
-        const server = net.createServer();
+        const server = http.createServer();
         server.once('error', reject);
         server.listen(0, 'localhost', () => {
             const { port } = server.address();
@@ -69,7 +70,6 @@ async function runDev({ root, port }) {
     let webPort;
     if (hasWeb(root)) {
         assertNoApiClash(root);
-        const { startAloDev } = require('./web.js');
         webPort = await freePort();
         alo = startAloDev(root, webPort);
         alo.once('exit', () => {
@@ -105,7 +105,7 @@ async function runDev({ root, port }) {
         const worker = fork(WORKER, port === undefined ? [] : [String(port)], {
             cwd: root,
             stdio: 'inherit',
-            env: webPort === undefined ? process.env : { ...process.env, ADHAR_WEB_PORT: String(webPort) },
+            env: webPort === undefined ? hostEnv() : { ...hostEnv(), ADHAR_WEB_PORT: String(webPort) },
         });
         child = worker;
         worker.once('exit', (code) => {

@@ -2,11 +2,12 @@
 
 // The process that `adhar dev` starts, and starts again after every change.
 const { AdharError } = require('../core/errors.js');
+const { hostEnv } = require('../core/env.js');
 const log = require('./log.js');
 const { run } = require('./serve.js');
 
 const port = process.argv[2] === undefined ? undefined : Number(process.argv[2]);
-const webPort = process.env.ADHAR_WEB_PORT ? Number(process.env.ADHAR_WEB_PORT) : undefined;
+const webPort = hostEnv().ADHAR_WEB_PORT ? Number(hostEnv().ADHAR_WEB_PORT) : undefined;
 
 // If the watching process dies without a goodbye (a crash, a closed terminal), do not live on alone.
 process.on('disconnect', () => process.exit(0));

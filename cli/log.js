@@ -1,5 +1,6 @@
 'use strict';
 
+const { hostEnv } = require('../core/env.js');
 const { formatDiagnostic } = require('../core/errors.js');
 
 const COLORS = {
@@ -11,7 +12,7 @@ const COLORS = {
 };
 
 function useColor(stream) {
-    if (process.env.NO_COLOR) return false;
+    if (hostEnv().NO_COLOR) return false;
     return Boolean(stream.isTTY);
 }
 

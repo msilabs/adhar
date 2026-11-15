@@ -136,8 +136,8 @@ async function runCommand(command, args, flags) {
     } else if (command === 'routes') {
         require('./routes.js').listRoutes(root);
     } else if (command === 'migrate') {
-        const { loadEnv } = require('../core/env.js');
-        require('./migrate.js').migrate(root, loadEnv(root, process.env));
+        const { hostEnv, loadEnv } = require('../core/env.js');
+        require('./migrate.js').migrate(root, loadEnv(root, hostEnv()));
     } else if (command === 'dev') {
         await require('./dev.js').runDev({ root, port: flags.port });
     } else {
