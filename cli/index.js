@@ -7,7 +7,7 @@ if (nodeParts[0] < MIN_NODE[0] || (nodeParts[0] === MIN_NODE[0] && nodeParts[1] 
     process.stderr.write(
         '✖ Error: Adhar needs Node.js ' + MIN_NODE.join('.') + ' or newer. ' +
             'You have v' + process.versions.node + '.\n\n' +
-            '  Hint: install a current LTS version from https://nodejs.org\n',
+            '  Hint: install a current LTS version of Node.js.\n',
     );
     process.exit(1);
 }

@@ -403,7 +403,7 @@ test('adhar init --web creates a full stack project', (t) => {
     const pkg = JSON.parse(read('package.json'));
     assert.deepEqual(pkg.scripts, { dev: 'adhar dev', build: 'adhar build', start: 'adhar start', migrate: 'adhar migrate' });
     assert.deepEqual(Object.keys(pkg.dependencies), ['@msilabs/adhar']);
-    assert.deepEqual(pkg.devDependencies, { '@msilabs/alo': '^1.1.0' });
+    assert.deepEqual(pkg.devDependencies, { '@msilabs/alo': '^1.2.2' });
 
     assert.equal(read('.gitignore'), 'node_modules/\nstorage/\n.env\nweb/dist/\nweb/.alo/\n');
     assert.doesNotMatch(read('.env.example'), /CORS/);

@@ -12,7 +12,7 @@ const TEMPLATE_DIR = path.join(__dirname, '..', 'templates', 'init');
 // What `init --web` adds: the Alo site that goes into web/, and a section for AGENTS.md.
 const WEB_TEMPLATE_DIR = path.join(__dirname, '..', 'templates', 'web');
 const WEB_AGENTS = path.join(__dirname, '..', 'templates', 'web-agents.md');
-const ALO_RANGE = '^1.1.0';
+const ALO_RANGE = '^1.2.2';
 // A folder holding only these still counts as empty, so `git init` before `adhar init` is fine.
 const IGNORABLE = new Set(['.git', '.DS_Store', 'Thumbs.db']);
 
