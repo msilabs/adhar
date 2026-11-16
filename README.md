@@ -1,8 +1,10 @@
 # আধার (Adhar)
 
+[![downloads](https://img.shields.io/npm/d18m/@msilabs/adhar)](https://www.npmjs.com/package/@msilabs/adhar)
 [![npm](https://img.shields.io/npm/v/@msilabs/adhar)](https://www.npmjs.com/package/@msilabs/adhar)
 [![CI](https://github.com/msilabs/adhar/actions/workflows/ci.yml/badge.svg)](https://github.com/msilabs/adhar/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/npm/l/@msilabs/adhar)](LICENSE)
+[![Socket Badge](https://badge.socket.dev/npm/package/@msilabs/adhar/1.2.3)](https://socket.dev/npm/package/@msilabs/adhar/overview/1.2.3)
 
 **হালকা backend API ফ্রেমওয়ার্ক; Alo-র সাথে full stack।** ফোল্ডারে সাধারণ JS ফাংশন লিখুন, পান JSON API: রাউটিং, middleware, ভ্যালিডেশন, service আর SQLite ডেটাবেস। Node.js ছাড়া আর কিছু লাগে না।
 
